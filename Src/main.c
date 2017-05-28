@@ -4,37 +4,37 @@
   * Description        : Main program body
   ******************************************************************************
   *
-  * Copyright (c) 2017 STMicroelectronics International N.V. 
+  * Copyright (c) 2017 STMicroelectronics International N.V.
   * All rights reserved.
   *
-  * Redistribution and use in source and binary forms, with or without 
+  * Redistribution and use in source and binary forms, with or without
   * modification, are permitted, provided that the following conditions are met:
   *
-  * 1. Redistribution of source code must retain the above copyright notice, 
+  * 1. Redistribution of source code must retain the above copyright notice,
   *    this list of conditions and the following disclaimer.
   * 2. Redistributions in binary form must reproduce the above copyright notice,
   *    this list of conditions and the following disclaimer in the documentation
   *    and/or other materials provided with the distribution.
-  * 3. Neither the name of STMicroelectronics nor the names of other 
-  *    contributors to this software may be used to endorse or promote products 
+  * 3. Neither the name of STMicroelectronics nor the names of other
+  *    contributors to this software may be used to endorse or promote products
   *    derived from this software without specific written permission.
-  * 4. This software, including modifications and/or derivative works of this 
+  * 4. This software, including modifications and/or derivative works of this
   *    software, must execute solely and exclusively on microcontroller or
   *    microprocessor devices manufactured by or for STMicroelectronics.
-  * 5. Redistribution and use of this software other than as permitted under 
-  *    this license is void and will automatically terminate your rights under 
-  *    this license. 
+  * 5. Redistribution and use of this software other than as permitted under
+  *    this license is void and will automatically terminate your rights under
+  *    this license.
   *
-  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS" 
-  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT 
-  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS"
+  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT
+  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
   * PARTICULAR PURPOSE AND NON-INFRINGEMENT OF THIRD PARTY INTELLECTUAL PROPERTY
-  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT 
+  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT
   * SHALL STMICROELECTRONICS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
   * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
+  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
   * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
   * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   *
@@ -46,11 +46,22 @@
 #include "cmsis_os.h"
 
 /* USER CODE BEGIN Includes */
+#include "serial.h"
+#include "can.h"
+#include "can2.h"
+#include "Can_Processor.h"
+#include "mcp3909.h"
+#include "nodeConf.h"
+#include "nodeMiscHelpers.h"
+#include "thermistor.h"
+#include "ts_lib.h"
+#include "../../CAN_ID.h"
 
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
 CAN_HandleTypeDef hcan1;
+CAN_HandleTypeDef hcan2;
 
 SPI_HandleTypeDef hspi2;
 DMA_HandleTypeDef hdma_spi2_rx;
@@ -62,20 +73,28 @@ DMA_HandleTypeDef hdma_usart2_tx;
 
 WWDG_HandleTypeDef hwwdg;
 
-osThreadId ApplicationHandle;
+osThreadId PPTPollHandle;
 osThreadId Can_ProcessorHandle;
-osThreadId RTHandle;
+osThreadId TempTaskHandle;
+osThreadId MCPTaskHandle;
 osMessageQId mainCanTxQHandle;
 osMessageQId mainCanRxQHandle;
+osMessageQId can2TxQHandle;
+osMessageQId can2RxQHandle;
 osTimerId WWDGTmrHandle;
 osTimerId HBTmrHandle;
 osMutexId swMtxHandle;
+osMutexId uartMtxHandle;
 osSemaphoreId mcp3909_DRHandle;
 osSemaphoreId mcp3909_RXHandle;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+MCP3909HandleTypeDef hmcp1;
+uint8_t mcpRxBuf[REG_LEN * REGS_NUM];
+uint8_t mcpTxBuf[REG_LEN * REGS_NUM + CTRL_LEN];
 
+uint8_t init_Done = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -87,15 +106,24 @@ static void MX_USART2_UART_Init(void);
 static void MX_CAN1_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_WWDG_Init(void);
-void doApplication(void const * argument);
+static void MX_CAN2_Init(void);
+void doPPTPoll(void const * argument);
 void doProcessCan(void const * argument);
-void doRT(void const * argument);
+void doTempTask(void const * argument);
+void doMCPTask(void const * argument);
 void TmrKickDog(void const * argument);
 void TmrSendHB(void const * argument);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
+void HAL_CAN_TxCpltCallback(CAN_HandleTypeDef* hcan);
+void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan);
+void HAL_CAN_ErrorCallback(CAN_HandleTypeDef * hcan);
+void HAL_GPIO_EXTI_Callback(uint16_t pinNum);
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi);
+void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi);
 
+void EM_Init();
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -106,7 +134,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+	selfStatusWord = INIT;
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -124,15 +152,42 @@ int main(void)
   MX_CAN1_Init();
   MX_SPI2_Init();
   MX_WWDG_Init();
+  MX_CAN2_Init();
 
   /* USER CODE BEGIN 2 */
+	__HAL_GPIO_EXTI_CLEAR_IT(DR1_Pin);
+	HAL_NVIC_DisableIRQ(EXTI9_5_IRQn);
+	__HAL_GPIO_EXTI_CLEAR_IT(DR1_Pin);
 
+	init_Done = 1;
+
+	Serial2_begin();
+
+	bxCan_begin(&hcan1, &mainCanRxQHandle, &mainCanTxQHandle);
+	bxCan_addMaskedFilterStd(p2pOffset,0xFF0,0);
+
+	bxCan2_begin(&hcan2, &can2RxQHandle, &can2TxQHandle);
+	bxCan2_addMaskedFilterStd(0,0,0);
+	bxCan2_addMaskedFilterExt(0,0,0);
+
+	#ifndef DISABLE_TMT
+	    Temp_begin(&hadc1);
+	#endif
+
+	#ifndef DISABLE_RT
+      EM_Init();
+      HAL_WWDG_Refresh(&hwwdg);
+    #endif
   /* USER CODE END 2 */
 
   /* Create the mutex(es) */
   /* definition and creation of swMtx */
   osMutexDef(swMtx);
   swMtxHandle = osMutexCreate(osMutex(swMtx));
+
+  /* definition and creation of uartMtx */
+  osMutexDef(uartMtx);
+  uartMtxHandle = osMutexCreate(osMutex(uartMtx));
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
@@ -165,17 +220,21 @@ int main(void)
   /* USER CODE END RTOS_TIMERS */
 
   /* Create the thread(s) */
-  /* definition and creation of Application */
-  osThreadDef(Application, doApplication, osPriorityLow, 0, 512);
-  ApplicationHandle = osThreadCreate(osThread(Application), NULL);
+  /* definition and creation of PPTPoll */
+  osThreadDef(PPTPoll, doPPTPoll, osPriorityNormal, 0, 512);
+  PPTPollHandle = osThreadCreate(osThread(PPTPoll), NULL);
 
   /* definition and creation of Can_Processor */
   osThreadDef(Can_Processor, doProcessCan, osPriorityAboveNormal, 0, 512);
   Can_ProcessorHandle = osThreadCreate(osThread(Can_Processor), NULL);
 
-  /* definition and creation of RT */
-  osThreadDef(RT, doRT, osPriorityRealtime, 0, 512);
-  RTHandle = osThreadCreate(osThread(RT), NULL);
+  /* definition and creation of TempTask */
+  osThreadDef(TempTask, doTempTask, osPriorityRealtime, 0, 512);
+  TempTaskHandle = osThreadCreate(osThread(TempTask), NULL);
+
+  /* definition and creation of MCPTask */
+  osThreadDef(MCPTask, doMCPTask, osPriorityHigh, 0, 512);
+  MCPTaskHandle = osThreadCreate(osThread(MCPTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -187,17 +246,25 @@ int main(void)
   mainCanTxQHandle = osMessageCreate(osMessageQ(mainCanTxQ), NULL);
 
   /* definition and creation of mainCanRxQ */
-  osMessageQDef(mainCanRxQ, 16, Can_frame_t);
+  osMessageQDef(mainCanRxQ, 32, Can_frame_t);
   mainCanRxQHandle = osMessageCreate(osMessageQ(mainCanRxQ), NULL);
+
+  /* definition and creation of can2TxQ */
+  osMessageQDef(can2TxQ, 32, Can_frame_t);
+  can2TxQHandle = osMessageCreate(osMessageQ(can2TxQ), NULL);
+
+  /* definition and creation of can2RxQ */
+  osMessageQDef(can2RxQ, 32, Can_frame_t);
+  can2RxQHandle = osMessageCreate(osMessageQ(can2RxQ), NULL);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
- 
+
 
   /* Start scheduler */
   osKernelStart();
-  
+
   /* We should never get here as control is now taken by the scheduler */
 
   /* Infinite loop */
@@ -221,13 +288,13 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct;
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
 
-    /**Configure the main internal regulator output voltage 
+    /**Configure the main internal regulator output voltage
     */
   __HAL_RCC_PWR_CLK_ENABLE();
 
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-    /**Initializes the CPU, AHB and APB busses clocks 
+    /**Initializes the CPU, AHB and APB busses clocks
     */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -244,7 +311,7 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 
-    /**Initializes the CPU, AHB and APB busses clocks 
+    /**Initializes the CPU, AHB and APB busses clocks
     */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -258,11 +325,11 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 
-    /**Configure the Systick interrupt time 
+    /**Configure the Systick interrupt time
     */
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
-    /**Configure the Systick 
+    /**Configure the Systick
     */
   HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
@@ -287,6 +354,29 @@ static void MX_CAN1_Init(void)
   hcan1.Init.RFLM = DISABLE;
   hcan1.Init.TXFP = DISABLE;
   if (HAL_CAN_Init(&hcan1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+}
+
+/* CAN2 init function */
+static void MX_CAN2_Init(void)
+{
+
+  hcan2.Instance = CAN2;
+  hcan2.Init.Prescaler = 10;
+  hcan2.Init.Mode = CAN_MODE_NORMAL;
+  hcan2.Init.SJW = CAN_SJW_3TQ;
+  hcan2.Init.BS1 = CAN_BS1_11TQ;
+  hcan2.Init.BS2 = CAN_BS2_4TQ;
+  hcan2.Init.TTCM = DISABLE;
+  hcan2.Init.ABOM = DISABLE;
+  hcan2.Init.AWUM = DISABLE;
+  hcan2.Init.NART = DISABLE;
+  hcan2.Init.RFLM = DISABLE;
+  hcan2.Init.TXFP = DISABLE;
+  if (HAL_CAN_Init(&hcan2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -351,10 +441,10 @@ static void MX_WWDG_Init(void)
 
 }
 
-/** 
+/**
   * Enable DMA controller clock
   */
-static void MX_DMA_Init(void) 
+static void MX_DMA_Init(void)
 {
   /* DMA controller clock enable */
   __HAL_RCC_DMA1_CLK_ENABLE();
@@ -375,16 +465,14 @@ static void MX_DMA_Init(void)
 
 }
 
-/** Configure pins as 
-        * Analog 
-        * Input 
+/** Configure pins as
+        * Analog
+        * Input
         * Output
         * EVENT_OUT
         * EXTI
-        * Free pins are configured automatically as Analog (this feature is enabled through 
+        * Free pins are configured automatically as Analog (this feature is enabled through
         * the Code Generation settings)
-     PB5   ------> CAN2_RX
-     PB6   ------> CAN2_TX
 */
 static void MX_GPIO_Init(void)
 {
@@ -413,19 +501,19 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PC0 PC1 PC4 PC5 
-                           PC6 PC7 PC10 PC11 
+  /*Configure GPIO pins : PC0 PC1 PC4 PC5
+                           PC6 PC7 PC10 PC11
                            PC12 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_4|GPIO_PIN_5 
-                          |GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_10|GPIO_PIN_11 
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_4|GPIO_PIN_5
+                          |GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_10|GPIO_PIN_11
                           |GPIO_PIN_12;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA0 PA1 PA6 PA7 
+  /*Configure GPIO pins : PA0 PA1 PA6 PA7
                            PA8 PA10 PA15 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_6|GPIO_PIN_7 
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_6|GPIO_PIN_7
                           |GPIO_PIN_8|GPIO_PIN_10|GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -445,11 +533,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB0 PB1 PB2 PB10 
-                           PB12 PB13 PB14 PB15 
+  /*Configure GPIO pins : PB0 PB1 PB2 PB10
+                           PB12 PB13 PB14 PB15
                            PB4 PB7 PB9 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_10 
-                          |GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15 
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_10
+                          |GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15
                           |GPIO_PIN_4|GPIO_PIN_7|GPIO_PIN_9;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -467,14 +555,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB5 PB6 */
-  GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_6;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF9_CAN2;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
   /*Configure GPIO pin : MCP2_CS_Pin */
   GPIO_InitStruct.Pin = MCP2_CS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
@@ -489,20 +569,99 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_CAN_TxCpltCallback(CAN_HandleTypeDef* hcan){
+	if (hcan == &hcan1)
+		CAN1_TxCpltCallback(hcan);
+	else if (hcan == &hcan2)
+		CAN2_TxCpltCallback(hcan);
+}
 
+void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan){
+	if (hcan == &hcan1)
+		CAN1_RxCpltCallback(hcan);
+    else if (hcan == &hcan2)
+		CAN2_RxCpltCallback(hcan);
+}
+
+void HAL_CAN_ErrorCallback(CAN_HandleTypeDef *hcan){
+	if (hcan == &hcan1)
+		CAN1_ErrorCallback(hcan);
+    else if (hcan == &hcan2)
+		CAN2_ErrorCallback(hcan);
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t pinNum){
+	if(init_Done){
+		if(pinNum == DR1_Pin){
+			HAL_NVIC_DisableIRQ(EXTI9_5_IRQn);
+			mcp3909_readAllChannels(&hmcp1,hmcp1.pRxBuf);
+			xSemaphoreGiveFromISR(mcp3909_DRHandle, NULL);
+		}
+	}
+}
+
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
+	// Check which SPI issued interrupt
+	if(hspi == (hbms1.hspi)){
+		HAL_GPIO_WritePin(LTC_CS_GPIO_Port,LTC_CS_Pin, GPIO_PIN_SET);
+		xSemaphoreGiveFromISR(bmsTRxCompleteHandle, NULL);
+	}else if(hspi == (hmcp1.hspi)){
+		HAL_GPIO_WritePin(MCP1_CS_GPIO_Port,MCP1_CS_Pin, GPIO_PIN_SET);
+		xSemaphoreGiveFromISR(mcp3909_RXHandle, NULL);
+	}
+}
+
+void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi){
+	// Check which SPI issued interrupt
+	if(hspi == (hbms1.hspi)){
+		HAL_GPIO_WritePin(LTC_CS_GPIO_Port,LTC_CS_Pin, GPIO_PIN_SET);
+	}else if(hspi == (hmcp1.hspi)){
+		HAL_GPIO_WritePin(MCP1_CS_GPIO_Port,MCP1_CS_Pin, GPIO_PIN_SET);
+	}
+}
+
+void EM_Init(){
+	hmcp1.phase[0] = 0;
+	hmcp1.phase[1] = 0;
+	hmcp1.phase[2] = 0;
+
+	for(uint8_t i= 0; i < MAX_CHANNEL_NUM; i++){
+		hmcp1.channel[i].PGA = PGA_1;
+		hmcp1.channel[i].boost = BOOST_OFF;
+		hmcp1.channel[i].dither = DITHER_ON;
+		hmcp1.channel[i].reset = RESET_OFF;
+		hmcp1.channel[i].shutdown = SHUTDOWN_OFF;
+		hmcp1.channel[i].resolution = RES_16;
+	}
+
+	hmcp1.extCLK = 0;
+	hmcp1.extVREF = 0;
+	hmcp1.hspi = &hspi2;
+	hmcp1.osr = OSR_32;
+	hmcp1.prescale = PRESCALE_1;
+	hmcp1.readType = READ_TYPE;
+
+	hmcp1.pRxBuf = mcpRxBuf;
+	hmcp1.pTxBuf = mcpTxBuf;
+
+//	HAL_NVIC_SetPriority(EXTI1_IRQn, 6, 0); // set DR pin interrupt priority
+//	HAL_NVIC_SetPriority(EXTI9_5_IRQn, 6, 0);
+	mcp3909_init(&hmcp1);
+}
 /* USER CODE END 4 */
 
-/* doApplication function */
-void doApplication(void const * argument)
+/* doPPTPoll function */
+void doPPTPoll(void const * argument)
 {
 
   /* USER CODE BEGIN 5 */
+  static Can_frame_t newFrame;
   /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END 5 */ 
+	for(;;){
+		xQueueReceive(can2RxQHandle, &newFrame, portMAX_DELAY);
+		bxCan_sendFrame(&newFrame);
+	}
+  /* USER CODE END 5 */
 }
 
 /* doProcessCan function */
@@ -512,28 +671,136 @@ void doProcessCan(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+    Can_Processor();
   }
   /* USER CODE END doProcessCan */
 }
 
-/* doRT function */
-void doRT(void const * argument)
+/* doTempTask function */
+void doTempTask(void const * argument)
 {
-  /* USER CODE BEGIN doRT */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END doRT */
+  /* USER CODE BEGIN doTempTask */
+  #ifndef DISABLE_TMT
+
+  #ifndef DISABLE_CAN
+  	static Can_frame_t newFrame;
+  	newFrame.dlc = 8;
+  	newFrame.isRemote = 0;
+  	newFrame.isExt = 0;
+  #else
+  	osDelay(10);
+  #endif
+
+    /* Infinite loop */
+    for(;;)
+    {
+  #ifndef DISABLE_CAN
+  	  if((selfStatusWord & 0x07) == ACTIVE){
+  #endif
+  		  uint16_t data;
+          int32_t microCelcius;
+  		  for(int i=0; 2*i<TEMP_CHANNELS; i++){
+  			  for(int j=0; j<2; j++){
+				  microCelcius = getMicroCelcius(2*i+j);
+  				  resetReading(2*i+j);
+
+  				  if(microCelcius >= OVER_TEMPERATURE || microCelcius <= UNDER_TEMPERATURE)
+  					  assert_bps_fault(tempOffset+i*2+j, microCelcius);
+  #ifndef DISABLE_CAN
+  				  *(int32_t*)(&(newFrame.Data[j*4])) = microCelcius;
+  #endif
+  			  }
+  #ifndef DISABLE_CAN
+  			  newFrame.id = tempOffset + i;
+  			  bxCan_sendFrame(&newFrame);
+  #endif
+  		  }
+  		  osDelay(TMT_Interval);
+  #ifndef DISABLE_CAN
+  	  }else{
+  		  osDelay(1);
+  	  }
+  #endif
+    }
+
+  #else
+    for(;;){
+  	  osDelay(1000);
+    }
+  #endif
+  /* USER CODE END doTempTask */
+}
+
+/* doMCPTask function */
+void doMCPTask(void const * argument)
+{
+	/* USER CODE BEGIN doMCPTask */
+	#ifndef DISABLE_RT
+
+	#ifndef DISABLE_CAN
+	static Can_frame_t newFrame;
+	newFrame.isExt = 0;
+	newFrame.isRemote = 0;
+	newFrame.dlc = 8;
+	#else
+	osDelay(10);
+	#endif
+	#ifndef DISABLE_SERIAL_OUT
+	static uint8_t intBuf[10];
+	#endif
+	static uint32_t previousWaitTime;
+
+	/* Infinite loop */
+	for(;;){
+		#ifndef DISABLE_CAN
+		if((selfStatusWord & 0x07) == ACTIVE){
+		#endif
+			previousWaitTime = osKernelSysTick();
+			mcp3909_wakeup(&hmcp1);
+			xSemaphoreTake(mcp3909_DRHandle, portMAX_DELAY);
+			xSemaphoreTake(mcp3909_RXHandle, portMAX_DELAY);
+			mcp3909_parseChannelData(&hmcp1);
+
+			for(int i=0; i<3; i++){
+				#ifndef DISABLE_CAN
+				newFrame.id = i<1 ? battPwr : (i<2 ? motorPwr : lpBusPwr);
+				for(int j=0; j<4; j++){
+					newFrame.Data[2*j] = hmcp1.registers[2*i] >> (24-8*j);
+					newFrame.Data[2*j+1] = hmcp1.registers[2*i+1] >> (24-8*j);
+				}
+				bxCan_sendFrame(&newFrame);
+				// there is no limit checking/bps kill for RT task.
+				#endif
+				#ifndef DISABLE_SERIAL_OUT
+				Serial2_writeBytes(intBuf, intToDec(hmcp1.registers[2*i], intBuf));
+				Serial2_write(',');
+				Serial2_writeBytes(intBuf, intToDec(hmcp1.registers[2*i+1], intBuf));
+				Serial2_write(',');
+				#endif
+			}
+			#ifndef DISABLE_SERIAL_OUT
+			Serial2_write('\n');
+			#endif
+			// XXX: Energy metering algorithm
+			mcp3909_sleep(&hmcp1);
+			HAL_WWDG_Refresh(&hwwdg);
+			osDelayUntil(&previousWaitTime, RT_Interval);
+			//osDelay(RT_Interval);
+		#ifndef DISABLE_CAN
+		}else{
+			  osDelay(65535);
+		}
+		#endif
+	/* USER CODE END doMCPTask */
 }
 
 /* TmrKickDog function */
 void TmrKickDog(void const * argument)
 {
   /* USER CODE BEGIN TmrKickDog */
-  
+  taskENTER_CRITICAL();
+  HAL_WWDG_Refresh(&hwwdg);
+  taskEXIT_CRITICAL();
   /* USER CODE END TmrKickDog */
 }
 
@@ -541,7 +808,39 @@ void TmrKickDog(void const * argument)
 void TmrSendHB(void const * argument)
 {
   /* USER CODE BEGIN TmrSendHB */
-  
+  static Can_frame_t newFrame;
+
+//	newFrame.isExt = 0;
+//	newFrame.isRemote = 0;
+  // ^ is initialized as 0
+
+  if(getSelfState() == ACTIVE){
+	  // Assemble new heartbeat frame
+	  newFrame.id = selfNodeID + swOffset;
+	  newFrame.dlc = CAN_HB_DLC;
+	  for(int i=0; i<4; i++){
+		  newFrame.Data[3-i] = (selfStatusWord >> (8*i)) & 0xff;			// Convert uint32_t -> uint8_t
+	  }
+	  bxCan_sendFrame(&newFrame);
+	  #ifdef DEBUG
+		  static uint8_t hbmsg[] = "Heartbeat issued\n";
+		  Serial2_writeBytes(hbmsg, sizeof(hbmsg)-1);
+	  #endif
+  }
+  else if (getSelfState() == INIT){
+	  // Assemble new addition request (firmware version) frame
+	  newFrame.id = selfNodeID + fwOffset;
+	  newFrame.dlc = CAN_FW_DLC;
+	  for(int i=0; i<4; i++){
+		  newFrame.Data[3-i] = (firmwareString >> (8*i)) & 0xff;			// Convert uint32_t -> uint8_t
+	  }
+	  bxCan_sendFrame(&newFrame);
+	  #ifdef DEBUG
+		  static uint8_t hbmsg[] = "Init handshake issued\n";
+		  Serial2_writeBytes(hbmsg, sizeof(hbmsg)-1);
+	  #endif
+  }
+  // No heartbeats sent in other states
   /* USER CODE END TmrSendHB */
 }
 
@@ -575,10 +874,10 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler */
   /* User can add his own implementation to report the HAL error return state */
-  while(1) 
+  while(1)
   {
   }
-  /* USER CODE END Error_Handler */ 
+  /* USER CODE END Error_Handler */
 }
 
 #ifdef USE_FULL_ASSERT
@@ -603,10 +902,10 @@ void assert_failed(uint8_t* file, uint32_t line)
 
 /**
   * @}
-  */ 
+  */
 
 /**
   * @}
-*/ 
+*/
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
