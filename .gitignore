@@ -6,4 +6,27 @@ Src/Backup
 
 .cproject
 
-.cproject
+# IAR Settings  
+**/settings/*.crun
+**/settings/*.dbgdt
+**/settings/*.cspy
+**/settings/*.cspy.*
+**/settings/*.xcl
+**/settings/*.dni
+**/settings/*.wsdt
+**/settings/*.wspos
+
+# IAR Trash
+EWARM/*.dep
+**/settings/*.dnx
+BuildLog.log
+
+# IAR Debug Exe  
+EWARM/*/Exe/*.sim
+
+# IAR Debug Obj  
+**/Obj/*.pbi
+**/Obj/*.pbi.*
+**/Obj/*.pbd
+**/Obj/*.pbd.*
+**/Obj/*.o
