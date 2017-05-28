@@ -53,6 +53,8 @@
 
 #define B1_Pin GPIO_PIN_13
 #define B1_GPIO_Port GPIOC
+#define TEMP3_Pin GPIO_PIN_1
+#define TEMP3_GPIO_Port GPIOA
 #define USART_TX_Pin GPIO_PIN_2
 #define USART_TX_GPIO_Port GPIOA
 #define USART_RX_Pin GPIO_PIN_3
@@ -61,10 +63,26 @@
 #define MCP1_CS_GPIO_Port GPIOA
 #define LD2_Pin GPIO_PIN_5
 #define LD2_GPIO_Port GPIOA
+#define TEMP1_Pin GPIO_PIN_6
+#define TEMP1_GPIO_Port GPIOA
+#define TEMP2_Pin GPIO_PIN_4
+#define TEMP2_GPIO_Port GPIOC
+#define EN1_Pin GPIO_PIN_1
+#define EN1_GPIO_Port GPIOB
+#define S2_Pin GPIO_PIN_2
+#define S2_GPIO_Port GPIOB
+#define S1_Pin GPIO_PIN_10
+#define S1_GPIO_Port GPIOB
+#define S3_Pin GPIO_PIN_12
+#define S3_GPIO_Port GPIOB
+#define S0_Pin GPIO_PIN_15
+#define S0_GPIO_Port GPIOB
 #define DR2_Pin GPIO_PIN_8
 #define DR2_GPIO_Port GPIOC
 #define DR1_Pin GPIO_PIN_9
 #define DR1_GPIO_Port GPIOC
+#define EN2_Pin GPIO_PIN_10
+#define EN2_GPIO_Port GPIOA
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14

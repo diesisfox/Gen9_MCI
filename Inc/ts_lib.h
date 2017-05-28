@@ -18,6 +18,7 @@
 
 void Temp_begin(ADC_HandleTypeDef* hadc_in);
 uint16_t getReading(uint8_t channel);
+void resetReading(uint8_t channel);
 int32_t getMilliCelcius(uint8_t channel);
 int32_t getMicroCelcius(uint8_t channel);
 

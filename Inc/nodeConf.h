@@ -48,7 +48,7 @@
 #define FToffset		0x0d0
 
 static const uint32_t firmwareString = 0x00000001;			// Firmware Version string
-static const uint8_t selfNodeID = adc_nodeID;					// The nodeID of this node
+static const uint8_t selfNodeID = ads_nodeID;					// The nodeID of this node
 extern uint32_t selfStatusWord;	// Initialize
 #define NODE_CONFIGURED
 
