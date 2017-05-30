@@ -222,6 +222,8 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
+  osTimerStart(WWDGTmrHandle, WD_Interval);
+  osTimerStart(HBTmrHandle, HB_Interval);
   /* USER CODE END RTOS_TIMERS */
 
   /* Create the thread(s) */
@@ -589,12 +591,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(MCP1_CS_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : LD2_Pin */
-  GPIO_InitStruct.Pin = LD2_Pin;
+  /*Configure GPIO pins : LD2_Pin EN2_Pin */
+  GPIO_InitStruct.Pin = LD2_Pin|EN2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PB0 PB13 PB14 PB4 
                            PB7 PB9 */
@@ -610,7 +612,7 @@ static void MX_GPIO_Init(void)
                           |S0_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : DR2_Pin DR1_Pin */
@@ -618,13 +620,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : EN2_Pin */
-  GPIO_InitStruct.Pin = EN2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(EN2_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PD2 */
   GPIO_InitStruct.Pin = GPIO_PIN_2;
@@ -826,10 +821,12 @@ void doMCPTask(void const * argument)
 
 			for(int i=0; i<3; i++){
 				newFrame.id = i<1 ? battPwr : (i<2 ? motorPwr : lpBusPwr);
-				for(int j=0; j<4; j++){
-					newFrame.Data[2*j] = hmcp1.registers[2*i] >> (24-8*j);
-					newFrame.Data[2*j+1] = hmcp1.registers[2*i+1] >> (24-8*j);
-				}
+//				for(int j=0; j<4; j++){
+//					newFrame.Data[2*j] = hmcp1.registers[2*i] >> (24-8*j);
+//					newFrame.Data[2*j+1] = hmcp1.registers[2*i+1] >> (24-8*j);
+//				}
+                *(uint32_t*)(&newFrame.Data[0]) = hmcp1.registers[2*i];
+                *(uint32_t*)(&newFrame.Data[4]) = hmcp1.registers[2*i+1];
 				bxCan_sendFrame(&newFrame);
 				// there is no limit checking/bps kill for RT task.
 			}
