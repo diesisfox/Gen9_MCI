@@ -3,6 +3,11 @@
   * File Name          : main.h
   * Description        : This file contains the common defines of the application
   ******************************************************************************
+  * This notice applies to any and all portions of this file
+  * that are not between comment pairs USER CODE BEGIN and
+  * USER CODE END. Other portions of this file, whether 
+  * inserted by the user or by software development tools
+  * are owned by their respective copyright owners.
   *
   * Copyright (c) 2017 STMicroelectronics International N.V. 
   * All rights reserved.
@@ -79,8 +84,10 @@
 #define S0_GPIO_Port GPIOB
 #define DR2_Pin GPIO_PIN_8
 #define DR2_GPIO_Port GPIOC
+#define DR2_EXTI_IRQn EXTI9_5_IRQn
 #define DR1_Pin GPIO_PIN_9
 #define DR1_GPIO_Port GPIOC
+#define DR1_EXTI_IRQn EXTI9_5_IRQn
 #define EN2_Pin GPIO_PIN_10
 #define EN2_GPIO_Port GPIOA
 #define TMS_Pin GPIO_PIN_13
@@ -95,6 +102,10 @@
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
+
+void _Error_Handler(char *, int);
+
+#define Error_Handler() _Error_Handler(__FILE__, __LINE__)
 
 /**
   * @}
