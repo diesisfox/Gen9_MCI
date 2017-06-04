@@ -20,9 +20,12 @@ Src/Backup
 EWARM/*.dep
 **/settings/*.dnx
 BuildLog.log
+**/List/*.map
 
 # IAR Debug Exe  
-EWARM/*/Exe/*.sim
+**/Exe/*.sim
+**/Exe/*.out
+**/List/*.map
 
 # IAR Debug Obj  
 **/Obj/*.pbi

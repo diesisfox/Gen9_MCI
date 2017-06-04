@@ -70,7 +70,7 @@ uint8_t mcp3909_SPI_ReadReg(MCP3909HandleTypeDef * hmcp, uint8_t address, uint8_
 	assert_param(address <= CONFIG);
 	assert_param(readType <= READ_ALL);
 #endif
-
+    
 	if(hmcp->readType != readType){
 		hmcp->readType = readType;	// Update Handle status
 		MODIFY_REG(hmcp->registers[STATUS], (0x03) << READ_MODE_OFFSET, readType << READ_MODE_OFFSET);	// Update register data
