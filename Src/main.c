@@ -808,7 +808,7 @@ void doTempTask(void const * argument)
   #endif
   			  }
   #ifndef DISABLE_CAN
-  			  newFrame.id = tempOffset + i;
+  			  newFrame.id = adcTempOffset + i;
   			  bxCan_sendFrame(&newFrame);
   #endif
   		  }
@@ -851,7 +851,7 @@ void doMCPTask(void const * argument)
 			mcp3909_parseChannelData(&hmcp1);
 
 			for(int i=0; i<3; i++){
-				newFrame.id = i<1 ? battPwr : (i<2 ? motorPwr : lpBusPwr);
+				newFrame.id = i<1 ? pptAPwr : (i<2 ? pptBPwr : pptCPwr);
 //				for(int j=0; j<4; j++){
 //					newFrame.Data[2*j] = hmcp1.registers[2*i] >> (24-8*j);
 //					newFrame.Data[2*j+1] = hmcp1.registers[2*i+1] >> (24-8*j);
