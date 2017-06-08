@@ -72,6 +72,8 @@
 #define TEMP1_GPIO_Port GPIOA
 #define TEMP2_Pin GPIO_PIN_4
 #define TEMP2_GPIO_Port GPIOC
+#define FAN_Pin GPIO_PIN_0
+#define FAN_GPIO_Port GPIOB
 #define EN1_Pin GPIO_PIN_1
 #define EN1_GPIO_Port GPIOB
 #define S2_Pin GPIO_PIN_2

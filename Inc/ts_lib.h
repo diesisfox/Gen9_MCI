@@ -10,7 +10,7 @@
 #include "cmsis_os.h"
 
 //MAX_CHANNEL specifies the number of channels of the mux in use
-#define TEMP_CHANNELS 16
+#define TEMP_CHANNELS 32
 #define TEMP_MUXES ((TEMP_CHANNELS-1)/16+1)
 #define OVER_TEMPERATURE 100000000
 #define UNDER_TEMPERATURE 0
