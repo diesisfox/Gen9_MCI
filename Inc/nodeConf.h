@@ -36,21 +36,31 @@
 #ifndef NODECONF_H_
 #define NODECONF_H_
 
+#include "stm32f4xx_hal.h"
+#include "../../CAN_ID.h"
+
+//Node handshake settings:
 #define HB_Interval		1000		// Node heartbeat send interval	(soft ms)
 #define WD_Interval		16			// Watdog timer refresh interval (soft ms) | MUST BE LESS THAN 26!!!
-
-#define RT_Interval		50
-#define SMT_Interval	1000
-#define TMT_Interval	500
-
-#define RT_Broadcast	20			//Multiplier of RT_Interval
-
-#define FToffset		0x0d0
-
 static const uint32_t firmwareString = 0x00000001;			// Firmware Version string
 static const uint8_t selfNodeID = ads_nodeID;					// The nodeID of this node
 extern uint32_t selfStatusWord;	// Initialize
 #define NODE_CONFIGURED
+
+//RTOS Task frequency settings:
+#define RT_Interval		50
+#define SMT_Interval	1000
+#define TMT_Interval	500
+#define RT_Broadcast	20			//Multiplier of RT_Interval
+#define FToffset		0x0d0
+
+//MCP3903 PSB Settings:
+#define PSB_OA			4000000		//uA
+#define PSB_UA			-4000000	//uA
+#define PSB_OV			140000000	//uV
+#define PSB_UV			80000000	//uV
+
+
 
 
 #endif /* NODECONF_H_ */
