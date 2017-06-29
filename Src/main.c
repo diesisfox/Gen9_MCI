@@ -838,6 +838,13 @@ void doMCPTask(void const * argument)
 	newFrame.isExt = 0;
 	newFrame.isRemote = 0;
 	newFrame.dlc = 8;
+    
+    static Can_frame_t dcFrame;
+    dcFrame.dlc = 0;
+    dcFrame.id = 0x701;
+    dcFrame.isExt = 0;
+    dcFrame.isRemote = 0;
+    uint8_t dcSent = 0;
 
 	osDelay(10);
 
@@ -851,6 +858,16 @@ void doMCPTask(void const * argument)
 			xSemaphoreTake(mcp3909_DRHandle, portMAX_DELAY);
 			xSemaphoreTake(mcp3909_RXHandle, portMAX_DELAY);
 			mcp3909_parseChannelData(&hmcp1);
+            
+            while(!mcp3909_verify(&hmcp1)){
+                if(!dcSent) bxCan_sendFrame(&dcFrame);
+                dcSent = 1;
+                HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 1);
+                EM_Init();
+                osDelay(100);
+                HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 0);
+			}
+            dcSent = 0;
 
 			int32_t temp;
 
