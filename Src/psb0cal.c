@@ -6,44 +6,50 @@
  */
 #include "psb0cal.h"
 
-// psb0ch0Map formula: (raw+20783)/33038
-// the below returns microVolts
+/*
+psb0ch0 linear fit: y = 32,867.086170862700x + 15,232.021526172000
+psb0ch1 linear fit: y = 164,015.724807117000x - 3,442.500000000020
+psb0ch2 linear fit: y = 32,968.361508850600x + 11,865.598039215400
+psb0ch3 linear fit: y = 323,411.068847426000x + 35,406.116438356200
+psb0ch4 linear fit: y = 33,059.320186758100x - 11,774.259803921900
+psb0ch5 linear fit: y = 324,696.617028814000x - 106,756.513698630000
+*/
+
+//returns microVolts
 int32_t psb0ch0Map(int32_t raw){
     if(raw&0x800000) raw -= 0x1000000;
-	return (int32_t)roundivide(((int64_t)raw*1000000000-20783000000000),33038000);
-//    return (int32_t)(((int64_t)raw*1000000000-69080970588235)/(int64_t)165597927);
+	return (int32_t)roundivide(((int64_t)raw*1000000000 - 15232021526172),32867086);
 }
 
-//psb1ch1Map formula: (raw + 30217.2042253521) / 163576.265422321;
-//the below returns microAmps
+//returns microAmps
 int32_t psb0ch1Map(int32_t raw){
     if(raw&0x800000) raw -= 0x1000000;
-	return (int32_t)roundivide(((int64_t)raw*1000000000+30217204225352),163576265);
-}
-
-// psb0ch2Map formula: TODO not calibrated yet
-// the below returns microVolts
-int32_t psb0ch2Map(int32_t raw){
-    return psb0ch4Map(raw);
-}
-
-//psb1ch3Map formula: TODO not calibrated yet
-//the below returns microAmps
-int32_t psb0ch3Map(int32_t raw){
-    return psb0ch5Map(raw);
-}
-
-// psb0ch4Map formula: (raw+17051.8328322493)/33134.5112988709
-// the below returns microVolts
-int32_t psb0ch4Map(int32_t raw){
-    if(raw&0x800000) raw -= 0x1000000;
-	return (int32_t)roundivide(((int64_t)raw*1000000000+17051832832249),33134511);
+	return (int32_t)roundivide(((int64_t)raw*1000000000 + 3442500000000),164015725);
 //    return (int32_t)(((int64_t)raw*1000000000-69080970588235)/(int64_t)165597927);
 }
 
-//psb1ch5Map formula: (raw-12693.6707317073)/324921.553523035
-//the below returns microAmps
+//returns microVolts
+int32_t psb0ch2Map(int32_t raw){
+    if(raw&0x800000) raw -= 0x1000000;
+	return (int32_t)roundivide(((int64_t)raw*1000000000 - 11865598039215),32968362);
+}
+
+//returns microAmps
+int32_t psb0ch3Map(int32_t raw){
+    if(raw&0x800000) raw -= 0x1000000;
+	return (int32_t)roundivide(((int64_t)raw*1000000000 - 35406116438356),323411069);
+//    return (int32_t)(((int64_t)raw*1000000000-69080970588235)/(int64_t)165597927);
+}
+
+//returns microVolts
+int32_t psb0ch4Map(int32_t raw){
+    if(raw&0x800000) raw -= 0x1000000;
+	return (int32_t)roundivide(((int64_t)raw*1000000000 + 11774259803922),33059320);
+}
+
+//returns microAmps
 int32_t psb0ch5Map(int32_t raw){
     if(raw&0x800000) raw -= 0x1000000;
-	return (int32_t)roundivide(((int64_t)raw*1000000000-12693670731707),324921554);
+	return (int32_t)roundivide(((int64_t)raw*1000000000 + 106756513698630),324696617);
+//    return (int32_t)(((int64_t)raw*1000000000-69080970588235)/(int64_t)165597927);
 }

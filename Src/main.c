@@ -734,6 +734,11 @@ void EM_Init(){
 		hmcp1.channel[i].resolution = RES_24;
 	}
 
+	// Amplify current sense channels to improve dynamic resolution
+	hmcp1.channel[1].PGA = PGA_2;
+	hmcp1.channel[3].PGA = PGA_4;
+	hmcp1.channel[5].PGA = PGA_4;
+
 	hmcp1.extCLK = 0;
 	hmcp1.extVREF = 0;
 	hmcp1.hspi = &hspi2;
@@ -802,9 +807,6 @@ void doTempTask(void const * argument)
   			  for(int j=0; j<2; j++){
 				  microCelcius = getMicroCelcius(2*i+j);
   				  resetReading(2*i+j);
-
-//  				  if(microCelcius >= OVER_TEMPERATURE || microCelcius <= UNDER_TEMPERATURE)
-//  					  assert_bps_fault(tempOffset+i*2+j, microCelcius);
   #ifndef DISABLE_CAN
   				  *(int32_t*)(&(newFrame.Data[j*4])) = microCelcius;
   #endif
@@ -838,7 +840,7 @@ void doMCPTask(void const * argument)
 	newFrame.isExt = 0;
 	newFrame.isRemote = 0;
 	newFrame.dlc = 8;
-    
+
     static Can_frame_t dcFrame;
     dcFrame.dlc = 0;
     dcFrame.id = 0x701;
@@ -858,7 +860,7 @@ void doMCPTask(void const * argument)
 			xSemaphoreTake(mcp3909_DRHandle, portMAX_DELAY);
 			xSemaphoreTake(mcp3909_RXHandle, portMAX_DELAY);
 			mcp3909_parseChannelData(&hmcp1);
-            
+
             while(!mcp3909_verify(&hmcp1)){
                 if(!dcSent) bxCan_sendFrame(&dcFrame);
                 dcSent = 1;

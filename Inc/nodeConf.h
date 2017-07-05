@@ -60,7 +60,8 @@ extern uint32_t selfStatusWord;	// Initialize
 #define PSB_OV			140000000	//uV
 #define PSB_UV			80000000	//uV
 
-
+//Thermistor settings:
+#define TEMP_CHANNELS		32
 
 
 #endif /* NODECONF_H_ */
