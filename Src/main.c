@@ -93,11 +93,31 @@ osSemaphoreId mcp3909_RXHandle;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-MCP3909HandleTypeDef hmcp1;
-uint8_t mcpRxBuf[REG_LEN * REGS_NUM];
-uint8_t mcpTxBuf[REG_LEN * REGS_NUM + CTRL_LEN];
 
 uint8_t init_Done = 0;
+
+Can_frame_t ecuFrames[] = {
+	//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":2,"id":"04089520","data":["01","01"]},
+	{0x04089520, 2, {0x01,0x01,00,00,00,00,00,00}, 1, 0, 0},
+
+//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":3,"id":"04048225","data":["01","01","00"]},
+	{0x04048225, 3, {0x01,0x01,0x00,00,00,00,00,00}, 1, 0, 0},
+
+//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","06","50","53","38","30","30","30"]},
+	{0x04080120, 8, {0x01,0x06,0x50,0x53,0x38,0x30,0x30,0x30}, 1, 0, 0},
+
+//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":2,"id":"04089520","data":["01","01"]},
+	{0x04089520, 2, {0x01,0x01}, 1, 0, 0},
+
+//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":3,"id":"04048225","data":["01","01","05"]},
+	{0x04048225, 3, {0x01,0x01,0x05}, 1, 0, 0},
+
+//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","00","00","01","00","00","02"]},
+	{0x04080120, 8, {0x01,0x02,0x00,0x00,0x01,0x00,0x00,0x02}, 1, 0, 0},
+
+//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","04","00","40","20","03","00"]},
+	{0x04080120, 8, {0x01,0x02,0x04,0x00,0x040,0x20,0x03,0x00}, 1, 0, 0},
+};
 
 //TODO flaming can dumpster
 /* USER CODE END PV */
@@ -123,8 +143,6 @@ void HAL_CAN_TxCpltCallback(CAN_HandleTypeDef* hcan);
 void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan);
 void HAL_CAN_ErrorCallback(CAN_HandleTypeDef * hcan);
 void HAL_GPIO_EXTI_Callback(uint16_t pinNum);
-void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi);
-void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi);
 void HAL_WWDG_EarlyWakeupCallback(WWDG_HandleTypeDef* hwwdg);
 
 void EM_Init();
@@ -628,29 +646,22 @@ static void MX_GPIO_Init(void)
 void HAL_CAN_TxCpltCallback(CAN_HandleTypeDef* hcan){
 	if (hcan == &hcan1)
 		CAN1_TxCpltCallback(hcan);
-	else if (hcan == &hcan2)
-		CAN2_TxCpltCallback(hcan);
 }
 
 void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan){
 	if (hcan == &hcan1)
 		CAN1_RxCpltCallback(hcan);
-    else if (hcan == &hcan2)
-		CAN2_RxCpltCallback(hcan);
 }
 
 void HAL_CAN_ErrorCallback(CAN_HandleTypeDef *hcan){
 	if (hcan == &hcan1)
 		CAN1_ErrorCallback(hcan);
-    else if (hcan == &hcan2)
-		CAN2_ErrorCallback(hcan);
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t pinNum){
 	if(init_Done){
 		if(pinNum == DR1_Pin){
 			HAL_NVIC_DisableIRQ(EXTI9_5_IRQn);
-			mcp3909_readAllChannels(&hmcp1,hmcp1.pRxBuf);
 			xSemaphoreGiveFromISR(mcp3909_DRHandle, NULL);
 		}
 	}
@@ -661,54 +672,7 @@ void HAL_WWDG_EarlyWakeupCallback(WWDG_HandleTypeDef* hwwdg){
   for(i = 0; i < 100; i++);
 }
 
-void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
-	// Check which SPI issued interrupt
-	if(hspi == (hmcp1.hspi)){
-		HAL_GPIO_WritePin(MCP1_CS_GPIO_Port,MCP1_CS_Pin, GPIO_PIN_SET);
-		xSemaphoreGiveFromISR(mcp3909_RXHandle, NULL);
-	}
-}
 
-void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi){
-	// Check which SPI issued interrupt
-	if(hspi == (hmcp1.hspi)){
-		HAL_GPIO_WritePin(MCP1_CS_GPIO_Port,MCP1_CS_Pin, GPIO_PIN_SET);
-	}
-}
-
-void EM_Init(){
-	hmcp1.phase[0] = 0;
-	hmcp1.phase[1] = 0;
-	hmcp1.phase[2] = 0;
-
-	for(uint8_t i= 0; i < MAX_CHANNEL_NUM; i++){
-		hmcp1.channel[i].PGA = PGA_1;
-		hmcp1.channel[i].boost = BOOST_OFF;
-		hmcp1.channel[i].dither = DITHER_ON;
-		hmcp1.channel[i].reset = RESET_OFF;
-		hmcp1.channel[i].shutdown = SHUTDOWN_OFF;
-		hmcp1.channel[i].resolution = RES_24;
-	}
-
-	// Amplify current sense channels to improve dynamic resolution
-	hmcp1.channel[1].PGA = PGA_2;
-	hmcp1.channel[3].PGA = PGA_4;
-	hmcp1.channel[5].PGA = PGA_4;
-
-	hmcp1.extCLK = 0;
-	hmcp1.extVREF = 0;
-	hmcp1.hspi = &hspi2;
-	hmcp1.osr = OSR_32;
-	hmcp1.prescale = PRESCALE_1;
-	hmcp1.readType = READ_TYPE;
-
-	hmcp1.pRxBuf = mcpRxBuf;
-	hmcp1.pTxBuf = mcpTxBuf;
-
-//	HAL_NVIC_SetPriority(EXTI1_IRQn, 6, 0); // set DR pin interrupt priority
-//	HAL_NVIC_SetPriority(EXTI9_5_IRQn, 6, 0);
-	mcp3909_init(&hmcp1);
-}
 /* USER CODE END 4 */
 
 /* doPPTPoll function */
@@ -738,9 +702,17 @@ void doProcessCan(void const * argument)
 
 	Can_frame_t newFrame;
 	newFrame.id = 0x04880120;
-	newFrame.ide = 1;
-	newFrame.rtr = 0;
-	newFrame.Data = {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}
+	newFrame.isExt = 1;
+	newFrame.isRemote = 0;
+        newFrame.dlc = 8;
+        newFrame.Data[0] = 0x01;
+        newFrame.Data[1] = 0x00;
+        newFrame.Data[2] = 0x04;
+        newFrame.Data[3] = 0x40;
+        newFrame.Data[4] = 0x00;
+        newFrame.Data[5] = 0x00;
+        newFrame.Data[6] = 0x14;
+	newFrame.Data[7] = 0x14;
 
   for(int i=0; i<(sizeof(ecuFrames)/sizeof(Can_frame_t)); i++){
 	  	bxCan_sendFrame(&(ecuFrames[i]));
@@ -765,6 +737,7 @@ void doProcessCan(void const * argument)
 		newFrame.Data[2] = 0x04;
 		newFrame.Data[3] = 0x40;
 	}
+        bxCan_sendFrame(&newFrame);
   }
   /* USER CODE END doProcessCan */
 }
@@ -829,8 +802,6 @@ void doHousekeeping(void const * argument)
   /* USER CODE BEGIN doHousekeeping */
 	static int bamboozle;
 	bamboozle = 0;
-	static int bamboozle2;
-	bamboozle2 = 0;
 	/* Infinite loop */
 	for(;;){
 		if(hcan1.State == HAL_CAN_STATE_READY || hcan1.State == HAL_CAN_STATE_BUSY_TX || \
@@ -843,19 +814,6 @@ void doHousekeeping(void const * argument)
 			HAL_CAN_Receive_IT(&hcan1, 0);
 		}
 		if(bamboozle > 12){
-			NVIC_SystemReset();
-		}
-
-		if(hcan2.State == HAL_CAN_STATE_READY || hcan2.State == HAL_CAN_STATE_BUSY_TX || \
-		hcan2.State == HAL_CAN_STATE_TIMEOUT || hcan2.State == HAL_CAN_STATE_ERROR){
-			bamboozle2++;
-		}else{
-			bamboozle2 = 0;
-		}
-		if(bamboozle2 > 8){
-			HAL_CAN_Receive_IT(&hcan2, 0);
-		}
-		if(bamboozle2 > 12){
 			NVIC_SystemReset();
 		}
 

@@ -1,5 +1,4 @@
 #include "ts_lib.h"
-#include "thermistor.h"
 
 static ADC_HandleTypeDef* hadc;
 
