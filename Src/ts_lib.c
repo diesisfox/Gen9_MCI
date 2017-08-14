@@ -11,6 +11,8 @@ static uint16_t dmaBuffer[8];
 
 static uint8_t convInProg = 0;
 
+uint32_t accelerator = 0;
+
 static void switchChannel(uint8_t channel){
 	HAL_GPIO_WritePin(S0_GPIO_Port, S0_Pin, channel & 0x1);
 	HAL_GPIO_WritePin(S1_GPIO_Port, S1_Pin, channel & 0x2);
@@ -19,21 +21,22 @@ static void switchChannel(uint8_t channel){
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
-	if(xSemaphoreTakeFromISR(tempMtxHandle, NULL)){
-		for(int i=0; 16*i+convInProg < TEMP_CHANNELS; i++){
-			uint8_t channel = 16*i+convInProg;
-			aggregate[channel] += dmaBuffer[i];
-			sampleCount[channel]++;
-			if(aggregate[channel] >= 0xFFFF0000){
-				aggregate[channel] /= sampleCount[channel];
-				sampleCount[channel] = 1;
-			}
-		}
-		xSemaphoreGiveFromISR(tempMtxHandle, NULL);
-		convInProg++;
-		convInProg%=16;
-	}
-	switchChannel(convInProg);
+	// if(xSemaphoreTakeFromISR(tempMtxHandle, NULL)){
+	// 	for(int i=0; 16*i+convInProg < TEMP_CHANNELS; i++){
+	// 		uint8_t channel = 16*i+convInProg;
+	// 		aggregate[channel] += dmaBuffer[i];
+	// 		sampleCount[channel]++;
+	// 		if(aggregate[channel] >= 0xFFFF0000){
+	// 			aggregate[channel] /= sampleCount[channel];
+	// 			sampleCount[channel] = 1;
+	// 		}
+	// 	}
+	// 	xSemaphoreGiveFromISR(tempMtxHandle, NULL);
+	// 	convInProg++;
+	// 	convInProg%=16;
+	// }
+	// switchChannel(convInProg);
+	accelerator = dmaBuffer[0];
 	HAL_ADC_Stop_DMA(hadc);
 	HAL_ADC_Start_DMA(hadc, (uint32_t*)dmaBuffer, TEMP_MUXES); //dw about ptr types. NEVER dma more than sequenced!
 }

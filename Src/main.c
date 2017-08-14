@@ -71,7 +71,6 @@ ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
 
 CAN_HandleTypeDef hcan1;
-CAN_HandleTypeDef hcan2;
 
 SPI_HandleTypeDef hspi2;
 DMA_HandleTypeDef hdma_spi2_rx;
@@ -86,12 +85,9 @@ WWDG_HandleTypeDef hwwdg;
 osThreadId PPTPollHandle;
 osThreadId Can_ProcessorHandle;
 osThreadId TempTaskHandle;
-osThreadId MCPTaskHandle;
 osThreadId HousekeepingHandle;
 osMessageQId mainCanTxQHandle;
 osMessageQId mainCanRxQHandle;
-osMessageQId can2TxQHandle;
-osMessageQId can2RxQHandle;
 osTimerId WWDGTmrHandle;
 osTimerId HBTmrHandle;
 osMutexId swMtxHandle;
@@ -106,6 +102,8 @@ uint8_t mcpRxBuf[REG_LEN * REGS_NUM];
 uint8_t mcpTxBuf[REG_LEN * REGS_NUM + CTRL_LEN];
 
 uint8_t init_Done = 0;
+
+//TODO flaming can dumpster
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -116,12 +114,10 @@ static void MX_USART2_UART_Init(void);
 static void MX_CAN1_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_WWDG_Init(void);
-static void MX_CAN2_Init(void);
 static void MX_ADC1_Init(void);
 void doPPTPoll(void const * argument);
 void doProcessCan(void const * argument);
 void doTempTask(void const * argument);
-void doMCPTask(void const * argument);
 void doHousekeeping(void const * argument);
 void TmrKickDog(void const * argument);
 void TmrSendHB(void const * argument);
@@ -148,6 +144,7 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 	selfStatusWord = INIT;
+	#define DISABLE_RT
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -173,7 +170,6 @@ int main(void)
   MX_CAN1_Init();
   MX_SPI2_Init();
   MX_WWDG_Init();
-  MX_CAN2_Init();
   MX_ADC1_Init();
 
   /* USER CODE BEGIN 2 */
@@ -186,11 +182,11 @@ int main(void)
 	Serial2_begin();
 
 	bxCan_begin(&hcan1, &mainCanRxQHandle, &mainCanTxQHandle);
-	bxCan_addMaskedFilterStd(p2pOffset,0xFF0,0);
-
-	bxCan2_begin(&hcan2, &can2RxQHandle, &can2TxQHandle);
-	bxCan2_addMaskedFilterStd(0,0,0);
-	bxCan2_addMaskedFilterExt(0,0,0);
+	// bxCan_addMaskedFilterStd(p2pOffset,0xFF0,0);
+	//
+	// bxCan2_begin(&hcan2, &can2RxQHandle, &can2TxQHandle);
+	// bxCan2_addMaskedFilterStd(0,0,0);
+	// bxCan2_addMaskedFilterExt(0,0,0);
 
 	#ifndef DISABLE_TMT
 	    Temp_begin(&hadc1);
@@ -240,7 +236,7 @@ int main(void)
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
   osTimerStart(WWDGTmrHandle, WD_Interval);
-  osTimerStart(HBTmrHandle, HB_Interval);
+  // osTimerStart(HBTmrHandle, HB_Interval);
   /* USER CODE END RTOS_TIMERS */
 
   /* Create the thread(s) */
@@ -256,10 +252,6 @@ int main(void)
   osThreadDef(TempTask, doTempTask, osPriorityRealtime, 0, 512);
   TempTaskHandle = osThreadCreate(osThread(TempTask), NULL);
 
-  /* definition and creation of MCPTask */
-  osThreadDef(MCPTask, doMCPTask, osPriorityHigh, 0, 512);
-  MCPTaskHandle = osThreadCreate(osThread(MCPTask), NULL);
-
   /* definition and creation of Housekeeping */
   osThreadDef(Housekeeping, doHousekeeping, osPriorityBelowNormal, 0, 512);
   HousekeepingHandle = osThreadCreate(osThread(Housekeeping), NULL);
@@ -270,20 +262,12 @@ int main(void)
 
   /* Create the queue(s) */
   /* definition and creation of mainCanTxQ */
-  osMessageQDef(mainCanTxQ, 64, Can_frame_t);
+  osMessageQDef(mainCanTxQ, 128, Can_frame_t);
   mainCanTxQHandle = osMessageCreate(osMessageQ(mainCanTxQ), NULL);
 
   /* definition and creation of mainCanRxQ */
-  osMessageQDef(mainCanRxQ, 32, Can_frame_t);
+  osMessageQDef(mainCanRxQ, 64, Can_frame_t);
   mainCanRxQHandle = osMessageCreate(osMessageQ(mainCanRxQ), NULL);
-
-  /* definition and creation of can2TxQ */
-  osMessageQDef(can2TxQ, 32, Can_frame_t);
-  can2TxQHandle = osMessageCreate(osMessageQ(can2TxQ), NULL);
-
-  /* definition and creation of can2RxQ */
-  osMessageQDef(can2RxQ, 32, Can_frame_t);
-  can2RxQHandle = osMessageCreate(osMessageQ(can2RxQ), NULL);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -424,7 +408,7 @@ static void MX_CAN1_Init(void)
 {
 
   hcan1.Instance = CAN1;
-  hcan1.Init.Prescaler = 5;
+  hcan1.Init.Prescaler = 10;
   hcan1.Init.Mode = CAN_MODE_NORMAL;
   hcan1.Init.SJW = CAN_SJW_1TQ;
   hcan1.Init.BS1 = CAN_BS1_13TQ;
@@ -436,29 +420,6 @@ static void MX_CAN1_Init(void)
   hcan1.Init.RFLM = DISABLE;
   hcan1.Init.TXFP = DISABLE;
   if (HAL_CAN_Init(&hcan1) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-}
-
-/* CAN2 init function */
-static void MX_CAN2_Init(void)
-{
-
-  hcan2.Instance = CAN2;
-  hcan2.Init.Prescaler = 10;
-  hcan2.Init.Mode = CAN_MODE_NORMAL;
-  hcan2.Init.SJW = CAN_SJW_3TQ;
-  hcan2.Init.BS1 = CAN_BS1_11TQ;
-  hcan2.Init.BS2 = CAN_BS2_4TQ;
-  hcan2.Init.TTCM = DISABLE;
-  hcan2.Init.ABOM = DISABLE;
-  hcan2.Init.AWUM = DISABLE;
-  hcan2.Init.NART = DISABLE;
-  hcan2.Init.RFLM = DISABLE;
-  hcan2.Init.TXFP = DISABLE;
-  if (HAL_CAN_Init(&hcan2) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -559,6 +520,8 @@ static void MX_DMA_Init(void)
         * EXTI
         * Free pins are configured automatically as Analog (this feature is enabled through
         * the Code Generation settings)
+     PB5   ------> CAN2_RX
+     PB6   ------> CAN2_TX
 */
 static void MX_GPIO_Init(void)
 {
@@ -654,6 +617,14 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PB5 PB6 */
+  GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_6;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Alternate = GPIO_AF9_CAN2;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : MCP2_CS_Pin */
   GPIO_InitStruct.Pin = MCP2_CS_Pin;
@@ -763,8 +734,7 @@ void doPPTPoll(void const * argument)
   static Can_frame_t newFrame;
   /* Infinite loop */
 	for(;;){
-		xQueueReceive(can2RxQHandle, &newFrame, portMAX_DELAY);
-		bxCan_sendFrame(&newFrame);
+		osDelay(1000);
 	}
   /* USER CODE END 5 */
 }
@@ -773,10 +743,43 @@ void doPPTPoll(void const * argument)
 void doProcessCan(void const * argument)
 {
   /* USER CODE BEGIN doProcessCan */
+  uint32_t val_100 = 0xfff;
+  uint32_t val_1 = val_100 / 100;
+  uint32_t map_100 = val_1*80;
+  uint32_t map_0 = val_1*20;
+  uint32_t map_range = map_100-map_0;
+	uint32_t map_val = 0;
+	uint32_t accelerator1;
+
+	Can_frame_t newFrame;
+	newFrame.id = 0x04880120;
+	newFrame.ide = 1;
+	newFrame.rtr = 0;
+	newFrame.Data = {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}
+
+  for(int i=0; i<(sizeof(ecuFrames)/sizeof(Can_frame_t)); i++){
+	  	bxCan_sendFrame(&(ecuFrames[i]));
+  }
   /* Infinite loop */
   for(;;)
   {
-    Can_Processor();
+	osDelay(35);
+	accelerator1 = accelerator;
+	if(accelerator1>map_100) accelerator1 = map_100;
+	if((accelerator1<=map_100) && (accelerator1>map_0)){
+		newFrame.Data[2] = 0x00;
+		newFrame.Data[3] = 0x44;
+		map_val = (accelerator1 - map_0) * 0xff / map_range;
+		newFrame.Data[1] = map_val&0xff;
+	}else if((accelerator1 > map_0/4) && (accelerator1 <= map_0)){
+		newFrame.Data[1] = 0x00;
+		newFrame.Data[2] = 0x04;
+		newFrame.Data[3] = 0x44;
+	}else if(accelerator1 <= map_0/4){
+		newFrame.Data[1] = 0x00;
+		newFrame.Data[2] = 0x04;
+		newFrame.Data[3] = 0x40;
+	}
   }
   /* USER CODE END doProcessCan */
 }
@@ -785,125 +788,54 @@ void doProcessCan(void const * argument)
 void doTempTask(void const * argument)
 {
   /* USER CODE BEGIN doTempTask */
-  #ifndef DISABLE_TMT
-
-  #ifndef DISABLE_CAN
-  	static Can_frame_t newFrame;
-  	newFrame.dlc = 8;
-  	newFrame.isRemote = 0;
-  	newFrame.isExt = 0;
-  #else
-  	osDelay(10);
-  #endif
-
-    /* Infinite loop */
-    for(;;)
-    {
-  #ifndef DISABLE_CAN
-  	  if((selfStatusWord & 0x07) == ACTIVE){
-  #endif
-          int32_t microCelcius;
-  		  for(int i=0; 2*i<TEMP_CHANNELS; i++){
-  			  for(int j=0; j<2; j++){
-				  microCelcius = getMicroCelcius(2*i+j);
-  				  resetReading(2*i+j);
-  #ifndef DISABLE_CAN
-  				  *(int32_t*)(&(newFrame.Data[j*4])) = microCelcius;
-  #endif
-  			  }
-  #ifndef DISABLE_CAN
-  			  newFrame.id = adcTempOffset + i;
-  			  bxCan_sendFrame(&newFrame);
-  #endif
-  		  }
-  		  osDelay(TMT_Interval);
-  #ifndef DISABLE_CAN
-  	  }else{
-  		  osDelay(1);
-  	  }
-  #endif
-    }
-
-  #else
-    for(;;){
-  	  osDelay(1000);
-    }
-  #endif
+  // #ifndef DISABLE_TMT
+  //
+  // #ifndef DISABLE_CAN
+  // 	static Can_frame_t newFrame;
+  // 	newFrame.dlc = 8;
+  // 	newFrame.isRemote = 0;
+  // 	newFrame.isExt = 0;
+  // #else
+  // 	osDelay(10);
+  // #endif
+  //
+  //   /* Infinite loop */
+  //   for(;;)
+  //   {
+  // #ifndef DISABLE_CAN
+  // 	  if((selfStatusWord & 0x07) == ACTIVE){
+  // #endif
+  //         int32_t microCelcius;
+  // 		  for(int i=0; 2*i<TEMP_CHANNELS; i++){
+  // 			  for(int j=0; j<2; j++){
+  // 		  microCelcius = getMicroCelcius(2*i+j);
+  // 				  resetReading(2*i+j);
+  // #ifndef DISABLE_CAN
+  // 				  *(int32_t*)(&(newFrame.Data[j*4])) = microCelcius;
+  // #endif
+  // 			  }
+  // #ifndef DISABLE_CAN
+  // 			  newFrame.id = adcTempOffset + i;
+  // 			  bxCan_sendFrame(&newFrame);
+  // #endif
+  // 		  }
+  // 		  osDelay(TMT_Interval);
+  // #ifndef DISABLE_CAN
+  // 	  }else{
+  // 		  osDelay(1);
+  // 	  }
+  // #endif
+  //   }
+  //
+  // #else
+  //   for(;;){
+  // 	  osDelay(1000);
+  //   }
+  // #endif
+  for(;;){
+	  osDelay(100);
+  }
   /* USER CODE END doTempTask */
-}
-
-/* doMCPTask function */
-void doMCPTask(void const * argument)
-{
-  /* USER CODE BEGIN doMCPTask */
-	static Can_frame_t newFrame;
-	newFrame.isExt = 0;
-	newFrame.isRemote = 0;
-	newFrame.dlc = 8;
-
-    static Can_frame_t dcFrame;
-    dcFrame.dlc = 0;
-    dcFrame.id = 0x701;
-    dcFrame.isExt = 0;
-    dcFrame.isRemote = 0;
-    uint8_t dcSent = 0;
-
-	osDelay(10);
-
-	static uint32_t previousWaitTime;
-
-	/* Infinite loop */
-	for(;;){
-		if((selfStatusWord & 0x07) == ACTIVE){
-			previousWaitTime = osKernelSysTick();
-			mcp3909_wakeup(&hmcp1);
-			xSemaphoreTake(mcp3909_DRHandle, portMAX_DELAY);
-			xSemaphoreTake(mcp3909_RXHandle, portMAX_DELAY);
-			mcp3909_parseChannelData(&hmcp1);
-
-            while(!mcp3909_verify(&hmcp1)){
-                if(!dcSent) bxCan_sendFrame(&dcFrame);
-                dcSent = 1;
-                HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 1);
-                EM_Init();
-                osDelay(100);
-                HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 0);
-			}
-            dcSent = 0;
-
-			int32_t temp;
-
-			newFrame.id = pptAPwr;
-			temp = psb0ch0Map(hmcp1.registers[0]);
-			*(int32_t*)(&(newFrame.Data[0])) = __REV(temp);
-			temp= psb0ch1Map(hmcp1.registers[1]);
-			*(int32_t*)(&(newFrame.Data[4])) = __REV(temp);
-			bxCan_sendFrame(&newFrame);
-
-			newFrame.id = pptBPwr;
-			temp = psb0ch2Map(hmcp1.registers[2]);
-			*(int32_t*)(&(newFrame.Data[0])) = __REV(temp);
-			temp= psb0ch3Map(hmcp1.registers[3]);
-			*(int32_t*)(&(newFrame.Data[4])) = __REV(temp);
-			bxCan_sendFrame(&newFrame);
-
-			newFrame.id = pptCPwr;
-			temp = psb0ch4Map(hmcp1.registers[4]);
-			*(int32_t*)(&(newFrame.Data[0])) = __REV(temp);
-			temp= psb0ch5Map(hmcp1.registers[5]);
-			*(int32_t*)(&(newFrame.Data[4])) = __REV(temp);
-			bxCan_sendFrame(&newFrame);
-
-			// XXX: Energy metering algorithm
-			mcp3909_sleep(&hmcp1);
-			HAL_WWDG_Refresh(&hwwdg);
-			osDelayUntil(&previousWaitTime, RT_Interval);
-			//osDelay(RT_Interval);
-        }else{
-          osDelay(1);
-        }
-    }
-  /* USER CODE END doMCPTask */
 }
 
 /* doHousekeeping function */

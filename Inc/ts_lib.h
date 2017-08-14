@@ -23,6 +23,8 @@
 #endif
 #define TEMP_OVERSAMPLING 16
 
+extern uint32_t accelerator;
+
 void Temp_begin(ADC_HandleTypeDef* hadc_in);
 uint16_t getReading(uint8_t channel);
 void resetReading(uint8_t channel);
