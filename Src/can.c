@@ -405,7 +405,7 @@ uint32_t bxCanDoTx(uint8_t fromISR){
  * 			>0 - CAN error
  */
 int bxCan_sendFrame(Can_frame_t *frame){
-	UBaseType_t fail = xQueueSend(*txQ, frame, portMAX_DELAY);
+	UBaseType_t fail = xQueueSend(*txQ, frame, 0);
 	if(fail == pdPASS){
 		// Only try to transmit if message successfully placed onto Tx Q
 		fail = bxCanDoTx(0);		// Call bxCAN Tx function from non-ISR context
