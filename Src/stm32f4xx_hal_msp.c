@@ -104,13 +104,18 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
     __HAL_RCC_ADC1_CLK_ENABLE();
   
     /**ADC1 GPIO Configuration    
-    PC0     ------> ADC1_IN10
-    PC1     ------> ADC1_IN11 
+    PC1     ------> ADC1_IN11
+    PA4     ------> ADC1_IN4 
     */
-    GPIO_InitStruct.Pin = ACCEL_Pin|REGEN_Pin;
+    GPIO_InitStruct.Pin = REGEN_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+    HAL_GPIO_Init(REGEN_GPIO_Port, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = ACCEL_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(ACCEL_GPIO_Port, &GPIO_InitStruct);
 
     /* ADC1 DMA Init */
     /* ADC1 Init */
@@ -150,10 +155,12 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
     __HAL_RCC_ADC1_CLK_DISABLE();
   
     /**ADC1 GPIO Configuration    
-    PC0     ------> ADC1_IN10
-    PC1     ------> ADC1_IN11 
+    PC1     ------> ADC1_IN11
+    PA4     ------> ADC1_IN4 
     */
-    HAL_GPIO_DeInit(GPIOC, ACCEL_Pin|REGEN_Pin);
+    HAL_GPIO_DeInit(REGEN_GPIO_Port, REGEN_Pin);
+
+    HAL_GPIO_DeInit(ACCEL_GPIO_Port, ACCEL_Pin);
 
     /* ADC1 DMA DeInit */
     HAL_DMA_DeInit(hadc->DMA_Handle);
