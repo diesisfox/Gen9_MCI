@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <workspace>
   <project>
-    <path>$WS_DIR$\ECU hack.ewp</path>
+    <path>$WS_DIR$\Gen9_MCI.ewp</path>
   </project>
   <batchBuild />
 </workspace>

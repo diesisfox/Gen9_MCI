@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=/Users/jamesliu/Development/STM32/ECU hack/Inc
+HeaderPath=/Users/jamesliu/Development/STM32/Gen9_MCI/Inc
 HeaderFiles=FreeRTOSConfig.h;stm32f4xx_it.h;stm32f4xx_hal_conf.h;main.h;
-SourcePath=/Users/jamesliu/Development/STM32/ECU hack/Src
+SourcePath=/Users/jamesliu/Development/STM32/Gen9_MCI/Src
 SourceFiles=FreeRTOSConfig.h;stm32f4xx_it.h;stm32f4xx_hal_conf.h;main.h;freertos.c;stm32f4xx_it.c;stm32f4xx_hal_msp.c;stm32f4xx_hal_timebase_TIM.c;main.c;
 
 [PreviousLibFiles]
