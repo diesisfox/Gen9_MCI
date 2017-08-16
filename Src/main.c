@@ -5,41 +5,41 @@
   ******************************************************************************
   * This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
+  * USER CODE END. Other portions of this file, whether
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * Copyright (c) 2017 STMicroelectronics International N.V. 
+  * Copyright (c) 2017 STMicroelectronics International N.V.
   * All rights reserved.
   *
-  * Redistribution and use in source and binary forms, with or without 
+  * Redistribution and use in source and binary forms, with or without
   * modification, are permitted, provided that the following conditions are met:
   *
-  * 1. Redistribution of source code must retain the above copyright notice, 
+  * 1. Redistribution of source code must retain the above copyright notice,
   *    this list of conditions and the following disclaimer.
   * 2. Redistributions in binary form must reproduce the above copyright notice,
   *    this list of conditions and the following disclaimer in the documentation
   *    and/or other materials provided with the distribution.
-  * 3. Neither the name of STMicroelectronics nor the names of other 
-  *    contributors to this software may be used to endorse or promote products 
+  * 3. Neither the name of STMicroelectronics nor the names of other
+  *    contributors to this software may be used to endorse or promote products
   *    derived from this software without specific written permission.
-  * 4. This software, including modifications and/or derivative works of this 
+  * 4. This software, including modifications and/or derivative works of this
   *    software, must execute solely and exclusively on microcontroller or
   *    microprocessor devices manufactured by or for STMicroelectronics.
-  * 5. Redistribution and use of this software other than as permitted under 
-  *    this license is void and will automatically terminate your rights under 
-  *    this license. 
+  * 5. Redistribution and use of this software other than as permitted under
+  *    this license is void and will automatically terminate your rights under
+  *    this license.
   *
-  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS" 
-  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT 
-  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS"
+  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT
+  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
   * PARTICULAR PURPOSE AND NON-INFRINGEMENT OF THIRD PARTY INTELLECTUAL PROPERTY
-  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT 
+  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT
   * SHALL STMICROELECTRONICS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
   * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
+  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
   * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
   * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   *
@@ -94,368 +94,6 @@ osMutexId uartMtxHandle;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
-uint8_t init_Done = 0;
-
-/*
-typedef struct
-{
-  uint32_t id;
-  uint8_t dlc;
-  uint8_t Data[8];
-  uint8_t isExt; //1 or 0
-  uint8_t isRemote;
-  int filterNum;
-}Can_frame_t;
-*/
-
-
-Can_frame_t ecuFrames[] = {
-	//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":2,"id":"04089520","data":["01","01"]},
-	{0x04089520, 2, {0x01,0x01,00,00,00,00,00,00}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":3,"id":"04048225","data":["01","01","00"]},
-	{0x04048225, 3, {0x01,0x01,0x00,00,00,00,00,00}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","06","50","53","38","30","30","30"]},
-	{0x04080120, 8, {0x01,0x06,0x50,0x53,0x38,0x30,0x30,0x30}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":2,"id":"04089520","data":["01","01"]},
-	{0x04089520, 2, {0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":3,"id":"04048225","data":["01","01","05"]},
-	{0x04048225, 3, {0x01,0x01,0x05,0x00,0x00,0x00,0x00,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","00","00","01","00","00","02"]},
-	{0x04080120, 8, {0x01,0x02,0x00,0x00,0x01,0x00,0x00,0x02}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","04","00","40","20","03","00"]},
-	{0x04080120, 8, {0x01,0x02,0x04,0x00,0x040,0x20,0x03,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","08","00","1C","46","64","64"]},
-	{0x04080120, 8, {0x01,0x02,0x08,0x00,0x1C,0x46,0x64,0x64}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","0C","00","64","64","64","02"]},
-	{0x04080120, 8, {0x01,0x02,0x0C,0x00,0x64,0x64,0x64,0x02}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","10","00","2F","20","14","01"]},
-	{0x04080120, 8, {0x01, 0x02, 0x10, 0x00, 0x2F, 0x20, 0x14, 0x01}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","14","00","0D","08","11","FF"]},
-	{0x04080120, 8, {0x01,0x02,0x14,0x00,0x0D,0x08,0x11,0xFF}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","18","00","FF","FF","FF","FF"]},
-	{0x04080120, 8, {0x01,0x02,0x18,0x00,0xFF,0xFF,0xFF,0xFF}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","1C","00","FF","FF","FF","FF"]},
-	{0x04080120, 8, {0x01,0x02,0x1C,0x00,0xFF,0xFF,0xFF,0xFF}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","20","00","FF","FF","FF","FF"]},
-	{0x04080120, 8, {0x01,0x02,0x20,0x00,0xFF,0xFF,0xFF,0xFF}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","24","00","1E","00","50","00"]},
-	{0x04080120, 8, {0x01,0x02,0x24,0x00,0x1E,0x00,0x50,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","28","00","32","00","19","00"]},
-	{0x04080120, 8, {0x01,0x02,0x28,0x00,0x32,0x00,0x19,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","2C","00","0A","00","0F","00"]},
-	{0x04080120, 8, {0x01,0x02,0x2C,0x00,0x0A,0x00,0x0F,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","30","00","0F","00","50","00"]},
-	{0x04080120, 8, {0x01,0x02,0x30,0x00,0x0F,0x00,0x50,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","34","00","41","00","64","00"]},
-	{0x04080120, 8, {0x01,0x02,0x34,0x00,0x41,0x00,0x64,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","38","00","3C","00","64","00"]},
-	{0x04080120, 8, {0x01,0x02,0x38,0x00,0x3C,0x00,0x64,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","3C","00","A0","00","64","00"]},
-	{0x04080120, 8, {0x01,0x02,0x3C,0x00,0xA0,0x00,0x64,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","40","00","FF","FF","16","01"]},
-	{0x04080120, 8, {0x01,0x02,0x40,0x00,0xFF,0xFF,0x16,0x01}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","44","00","04","01","50","00"]},
-	{0x04080120, 8, {0x01,0x02,0x44,0x00,0x04,0x01,0x50,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","48","00","16","01","50","00"]},
-	{0x04080120, 8, {0x01,0x02,0x48,0x00,0x16,0x01,0x50,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","4C","00","00","00","1E","00"]},
-	{0x04080120, 8, {0x01,0x02,0x4C,0x00,0x00,0x00,0x1E,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:00","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","50","00","0F","00","54","01"]},
-	{0x04080120, 8, {0x01,0x02,0x50,0x00,0x0F,0x00,0x54,0x01}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","54","00","58","02","5A","00"]},
-	{0x04080120, 8, {0x01,0x02,0x54,0x00,0x58,0x02,0x5A,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","58","00","2A","01","02","00"]},
-	{0x04080120, 8, {0x01,0x02,0x58,0x00,0x2A,0x01,0x02,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","5C","00","50","00","16","01"]},
-	{0x04080120, 8, {0x01,0x02,0x5C,0x00,0x50,0x00,0x16,0x01}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","60","00","90","01","90","01"]},
-	{0x04080120, 8, {0x01,0x02,0x60,0x00,0x90,0x01,0x90,0x01}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","64","00","10","00","AF","00"]},
-	{0x04080120, 8, {0x01,0x02,0x64,0x00,0x10,0x00,0xAF,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","68","00","20","03","FF","FF"]},
-	{0x04080120, 8, {0x01,0x02,0x68,0x00,0x20,0x03,0xFF,0xFF}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","6C","00","FF","FF","FF","FF"]},
-	{0x04080120, 8, {0x01,0x02,0x6C,0x00,0xFF,0xFF,0xFF,0xFF}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","70","00","FF","FF","FF","FF"]},
-	{0x04080120, 8, {0x01,0x02,0x70,0x00,0xFF,0xFF,0xFF,0xFF}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","74","00","FF","FF","FF","FF"]},
-	{0x04080120, 8, {0x01,0x02,0x74,0x00,0xFF,0xFF,0xFF,0xFF}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","78","00","FF","FF","FF","FF"]},
-	{0x04080120, 8, {0x01,0x02,0x78,0x00,0xFF,0xFF,0xFF,0xFF}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","7C","00","FF","FF","FF","FF"]},
-	{0x04080120, 8, {0x01,0x02,0x7C,0x00,0xFF,0xFF,0xFF,0xFF}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","80","00","FF","FF","FF","FF"]},
-	{0x04080120, 8, {0x01,0x02,0x80,0x00,0xFF,0xFF,0xFF,0xFF}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","84","00","FF","FF","FF","FF"]},
-	{0x04080120, 8, {0x01,0x02,0x84,0x00,0xFF,0xFF,0xFF,0xFF}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","88","00","FF","FF","FF","FF"]},
-	{0x04080120, 8, {0x01,0x02,0x88,0x00,0xFF,0xFF,0xFF,0xFF}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","8C","00","FF","FF","FF","00"]},
-	{0x04080120, 8, {0x01,0x02,0x8C,0x00,0xFF,0xFF,0xFF,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","90","00","10","01","21","01"]},
-	{0x04080120, 8, {0x01,0x02,0x90,0x00,0x10,0x01,0x21,0x01}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","94","00","32","01","43","01"]},
-	{0x04080120, 8, {0x01,0x02,0x94,0x00,0x32,0x01,0x43,0x01}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","98","00","54","01","65","01"]},
-	{0x04080120, 8, {0x01,0x02,0x98,0x00,0x54,0x01,0x65,0x01}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","9C","00","76","01","87","01"]},
-	{0x04080120, 8, {0x01,0x02,0x9C,0x00,0x76,0x01,0x87,0x01}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","A0","00","98","01","A9","01"]},
-	{0x04080120, 8, {0x01,0x02,0xA0,0x00,0x98,0x01,0xA9,0x01}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","A4","00","BA","01","CB","01"]},
-	{0x04080120, 8, {0x01,0x02,0xA4,0x00,0xBA,0x01,0xCB,0x01}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","A8","00","DC","01","ED","01"]},
-	{0x04080120, 8, {0x01,0x02,0xA8,0x00,0xDC,0x01,0xED,0x01}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","AC","00","FF","01","02","03"]},
-	{0x04080120, 8, {0x01,0x02,0xAC,0x00,0xFF,0x01,0x02,0x03}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","B0","00","D5","02","A4","02"]},
-	{0x04080120, 8, {0x01,0x02,0xB0,0x00,0xD5,0x02,0xA4,0x02}, 1, 0, 0},
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","B4","00","74","02","44","02"]},
-	{0x04080120, 8, {0x01,0x02,0xB4,0x00,0x74,0x02,0x44,0x02}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","B8","00","13","02","E3","01"]},
-	{0x04080120, 8, {0x01,0x02,0xB8,0x00,0x13,0x02,0xE3,0x01}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","BC","00","B3","01","82","01"]},
-	{0x04080120, 8, {0x01,0x02,0xBC,0x00,0xB3,0x01,0x82,0x01}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","C0","00","52","01","22","01"]},
-	{0x04080120, 8, {0x01,0x02,0xC0,0x00,0x52,0x01,0x22,0x01}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","C4","00","F1","00","C1","00"]},
-	{0x04080120, 8, {0x01,0x02,0xC4,0x00,0xF1,0x00,0xC1,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","C8","00","91","00","61","00"]},
-	{0x04080120, 8, {0x01,0x02,0xC8,0x00,0x91,0x00,0x61,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","CC","00","30","00","9B","00"]},
-	{0x04080120, 8, {0x01,0x02,0xCC,0x00,0x30,0x00,0x9B,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","D0","00","A3","00","A8","00"]},
-	{0x04080120, 8, {0x01,0x02,0xD0,0x00,0xA3,0x00,0xA8,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","D4","00","AF","00","B5","00"]},
-	{0x04080120, 8, {0x01,0x02,0xD4,0x00,0xAF,0x00,0xB5,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","D8","00","BC","00","C1","00"]},
-	{0x04080120, 8, {0x01,0x02,0xD8,0x00,0xBC,0x00,0xC1,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","DC","00","C9","00","CE","00"]},
-	{0x04080120, 8, {0x01,0x02,0xDC,0x00,0xC9,0x00,0xCE,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","E0","00","D3","00","D8","00"]},
-	{0x04080120, 8, {0x01,0x02,0xE0,0x00,0xD3,0x00,0xD8,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","E4","00","D8","00","D8","00"]},
-	{0x04080120, 8, {0x01,0x02,0xE4,0x00,0xD8,0x00,0xD8,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","E8","00","D8","00","D8","00"]},
-	{0x04080120, 8, {0x01,0x02,0xE8,0x00,0xD8,0x00,0xD8,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","EC","00","D8","00","68","89"]},
-	{0x04080120, 8, {0x01,0x02,0xEC,0x00,0xD8,0x00,0x68,0x69}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","F0","00","09","00","03","00"]},
-{0x04080120, 8, {0x01,0x02,0xF0,0x00,0x09,0x00,0x03,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","F4","00","00","00","FF","FF"]},
-	{0x04080120, 8, {0x01,0x02,0xF4,0x00,0x00,0x00,0xFF,0xFF}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","F8","00","FF","FF","FF","FF"]},
-	{0x04080120, 8, {0x01,0x02,0xF8,0x00,0xFF,0xFF,0xFF,0xFF}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","FC","00","FF","FF","FF","FF"]},
-	{0x04080120, 8, {0x01,0x02,0xFC,0x00,0xFF,0xFF,0xFF,0xFF}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","18","01","FF","FF","FF","FF"]},
-	{0x04080120, 8, {0x01,0x02,0x18,0x01,0xFF,0xFF,0xFF,0xFF}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","48","01","FF","FF","FF","FF"]},
-	{0x04080120, 8, {0x01,0x02,0x48,0x01,0xFF,0xFF,0xFF,0xFF}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","90","01","FF","FF","FF","FF"]},
-	{0x04080120, 8, {0x01,0x02,0x90,0x01,0xFF,0xFF,0xFF,0xFF}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04080120","data":["01","02","C0","01","FF","FF","FF","FF"]},
-	{0x04080120, 8, {0x01,0x02,0xC0,0x01,0xFF,0xFF,0xFF,0xFF}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":2,"id":"04080120","data":["01","03"]},
-	{0x04080120, 2, {0x01,0x03,0x00,0x00,0x00,0x00,0x00,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":2,"id":"04089520","data":["01","01"]},
-	{0x04089520, 2, {0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":3,"id":"04048225","data":["01","01","02"]},
-	{0x04048225, 3, {0x01,0x01,0x02,0x00,0x00,0x00,0x00,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":2,"id":"04080120","data":["01","04"]},
-	{0x0408120, 2, {0x01,0x04,0x00,0x00,0x00,0x00,0x00,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:01","type":"frame","ide":true,"rtr":false,"dlc":2,"id":"04089520","data":["01","01"]},
-	{0x04089520, 2, {0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00}, 1, 0, 0},
-
-//{"timestamp":"01:53:02","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["00","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x00,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-
-//{"timestamp":"01:53:02","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["02","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x02,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-
-//{"timestamp":"01:53:02","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["02","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x02,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]}
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-//{"timestamp":"01:53:04","type":"frame","ide":true,"rtr":false,"dlc":8,"id":"04880120","data":["01","00","04","40","00","00","14","14"]},
-	{0x04880120, 8, {0x01,0x00,0x04,0x40,0x00,0x00,0x14,0x14}, 1, 0, 0},
-
-
-};
-
-
-
 
 //TODO flaming can dumpster
 /* USER CODE END PV */
@@ -525,11 +163,6 @@ int main(void)
   MX_CAN2_Init();
 
   /* USER CODE BEGIN 2 */
-	__HAL_GPIO_EXTI_CLEAR_IT(DR1_Pin);
-	HAL_NVIC_DisableIRQ(EXTI9_5_IRQn);
-	__HAL_GPIO_EXTI_CLEAR_IT(DR1_Pin);
-
-	init_Done = 1;
 
 	Serial2_begin();
 
@@ -544,10 +177,6 @@ int main(void)
 	    Temp_begin(&hadc1);
 	#endif
 
-	#ifndef DISABLE_RT
-      EM_Init();
-      HAL_WWDG_Refresh(&hwwdg);
-    #endif
   /* USER CODE END 2 */
 
   /* Create the mutex(es) */
@@ -623,11 +252,11 @@ int main(void)
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
- 
+
 
   /* Start scheduler */
   osKernelStart();
-  
+
   /* We should never get here as control is now taken by the scheduler */
 
   /* Infinite loop */
@@ -651,13 +280,13 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct;
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
 
-    /**Configure the main internal regulator output voltage 
+    /**Configure the main internal regulator output voltage
     */
   __HAL_RCC_PWR_CLK_ENABLE();
 
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-    /**Initializes the CPU, AHB and APB busses clocks 
+    /**Initializes the CPU, AHB and APB busses clocks
     */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
@@ -673,7 +302,7 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Initializes the CPU, AHB and APB busses clocks 
+    /**Initializes the CPU, AHB and APB busses clocks
     */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -687,11 +316,11 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure the Systick interrupt time 
+    /**Configure the Systick interrupt time
     */
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
-    /**Configure the Systick 
+    /**Configure the Systick
     */
   HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
@@ -705,7 +334,7 @@ static void MX_ADC1_Init(void)
 
   ADC_ChannelConfTypeDef sConfig;
 
-    /**Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
+    /**Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
     */
   hadc1.Instance = ADC1;
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
@@ -724,7 +353,7 @@ static void MX_ADC1_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
+    /**Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
     */
   sConfig.Channel = ADC_CHANNEL_10;
   sConfig.Rank = 1;
@@ -734,7 +363,7 @@ static void MX_ADC1_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
+    /**Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
     */
   sConfig.Channel = ADC_CHANNEL_11;
   sConfig.Rank = 2;
@@ -826,10 +455,10 @@ static void MX_WWDG_Init(void)
 
 }
 
-/** 
+/**
   * Enable DMA controller clock
   */
-static void MX_DMA_Init(void) 
+static void MX_DMA_Init(void)
 {
   /* DMA controller clock enable */
   __HAL_RCC_DMA1_CLK_ENABLE();
@@ -848,13 +477,13 @@ static void MX_DMA_Init(void)
 
 }
 
-/** Configure pins as 
-        * Analog 
-        * Input 
+/** Configure pins as
+        * Analog
+        * Input
         * Output
         * EVENT_OUT
         * EXTI
-        * Free pins are configured automatically as Analog (this feature is enabled through 
+        * Free pins are configured automatically as Analog (this feature is enabled through
         * the Code Generation settings)
 */
 static void MX_GPIO_Init(void)
@@ -878,19 +507,19 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PC2 PC3 PC4 PC7 
+  /*Configure GPIO pins : PC2 PC3 PC4 PC7
                            PC9 PC10 PC11 PC12 */
-  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_7 
+  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_7
                           |GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA0 PA1 PA4 PA6 
-                           PA7 PA8 PA9 PA10 
+  /*Configure GPIO pins : PA0 PA1 PA4 PA6
+                           PA7 PA8 PA9 PA10
                            PA15 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_4|GPIO_PIN_6 
-                          |GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10 
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_4|GPIO_PIN_6
+                          |GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10
                           |GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -909,13 +538,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB0 PB1 PB2 PB10 
-                           PB12 PB13 PB14 PB15 
-                           PB3 PB4 PB7 PB8 
+  /*Configure GPIO pins : PB0 PB1 PB2 PB10
+                           PB12 PB13 PB14 PB15
+                           PB3 PB4 PB7 PB8
                            PB9 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_10 
-                          |GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15 
-                          |GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_7|GPIO_PIN_8 
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_10
+                          |GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15
+                          |GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_7|GPIO_PIN_8
                           |GPIO_PIN_9;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -972,7 +601,7 @@ void doMotCtrl(void const * argument)
 	for(;;){
 		osDelay(1000);
 	}
-  /* USER CODE END 5 */ 
+  /* USER CODE END 5 */
 }
 
 /* doProcessCan function */
@@ -1035,6 +664,8 @@ void doHousekeeping(void const * argument)
   /* USER CODE BEGIN doHousekeeping */
 	static int bamboozle;
 	bamboozle = 0;
+	static int bamboozle2;
+	bamboozle2 = 0;
 	/* Infinite loop */
 	for(;;){
 		if(hcan1.State == HAL_CAN_STATE_READY || hcan1.State == HAL_CAN_STATE_BUSY_TX || \
@@ -1047,6 +678,19 @@ void doHousekeeping(void const * argument)
 			HAL_CAN_Receive_IT(&hcan1, 0);
 		}
 		if(bamboozle > 12){
+			NVIC_SystemReset();
+		}
+
+		if(hcan2.State == HAL_CAN_STATE_READY || hcan2.State == HAL_CAN_STATE_BUSY_TX || \
+		hcan2.State == HAL_CAN_STATE_TIMEOUT || hcan2.State == HAL_CAN_STATE_ERROR){
+			bamboozle2++;
+		}else{
+			bamboozle2 = 0;
+		}
+		if(bamboozle2 > 8){
+			HAL_CAN_Receive_IT(&hcan2, 0);
+		}
+		if(bamboozle2 > 12){
 			NVIC_SystemReset();
 		}
 
@@ -1150,7 +794,7 @@ void _Error_Handler(char * file, int line)
   while(1)
   {
   }
-  /* USER CODE END Error_Handler_Debug */ 
+  /* USER CODE END Error_Handler_Debug */
 }
 
 #ifdef USE_FULL_ASSERT
@@ -1175,10 +819,10 @@ void assert_failed(uint8_t* file, uint32_t line)
 
 /**
   * @}
-  */ 
+  */
 
 /**
   * @}
-*/ 
+*/
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
