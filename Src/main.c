@@ -373,7 +373,7 @@ static void MX_CAN1_Init(void)
 {
 
   hcan1.Instance = CAN1;
-  hcan1.Init.Prescaler = 10;
+  hcan1.Init.Prescaler = 20;
   hcan1.Init.Mode = CAN_MODE_NORMAL;
   hcan1.Init.SJW = CAN_SJW_1TQ;
   hcan1.Init.BS1 = CAN_BS1_13TQ;
@@ -396,7 +396,7 @@ static void MX_CAN2_Init(void)
 {
 
   hcan2.Instance = CAN2;
-  hcan2.Init.Prescaler = 10;
+  hcan2.Init.Prescaler = 20;
   hcan2.Init.Mode = CAN_MODE_NORMAL;
   hcan2.Init.SJW = CAN_SJW_1TQ;
   hcan2.Init.BS1 = CAN_BS1_13TQ;
@@ -593,11 +593,11 @@ void doMotCtrl(void const * argument)
 {
 
   /* USER CODE BEGIN 5 */
-	#define MOT_BASE_ID		0x10
+	#define MOT_BASE_ID		0x500
 	#define MOT_DRV_CMD_ID	MOT_BASE_ID + 0x01
 	#define MOT_PWR_CMD_ID	MOT_BASE_ID + 0x02
 	#define MOT_RST_CMD_ID	MOT_BASE_ID + 0x03
-	#define POS_100			80
+	#define POS_100			70
 	#define POS_0			20
 	#define MAX_RPM			700
 
@@ -628,6 +628,10 @@ void doMotCtrl(void const * argument)
 			newFrame.id = MOT_RST_CMD_ID;
 			bxCan_sendFrame(&newFrame);
 		}else if(motOn){
+                  newFrame.id = MOT_PWR_CMD_ID;
+                  frameData[0] = 1.0f;
+                  frameData[1] = 1.0f;
+                  bxCan_sendFrame(&newFrame);
 			newFrame.id = MOT_DRV_CMD_ID;
 			drvDir = HAL_GPIO_ReadPin(DRV_DIR_GPIO_Port, DRV_DIR_Pin);
 			drvMode = HAL_GPIO_ReadPin(DRV_MODE_GPIO_Port, DRV_MODE_Pin);
@@ -641,31 +645,31 @@ void doMotCtrl(void const * argument)
 			}else{
 				temp = 1.0f;
 			}
-			if(drvMode){ //speed drive
-				frameData[0] = 1.0f;
+			if(!drvMode){ //speed drive
+				frameData[1] = 1.0f;
                                 temp*=MAX_RPM;
                                 for(int i=0; i<4; i++){
-                                  ((uint32_t*)frameData)[1] &= ~(0xff<<(8*i));
-                                  ((uint32_t*)frameData)[1] |= *((uint32_t*)&temp)&(0xff<<(8*i));
+                                  ((uint32_t*)frameData)[0] &= ~(0xff<<(8*i));
+                                  ((uint32_t*)frameData)[0] |= *((uint32_t*)&temp)&(0xff<<(8*i));
                                 }
 //				frameData[1] = temp * MAX_RPM;
 			}else{ //current drive
                           for(int i=0; i<4; i++){
-                            ((uint32_t*)frameData)[0] &= ~(0xff<<(8*i));
-                            ((uint32_t*)frameData)[0] |= *((uint32_t*)&temp)&(0xff<<(8*i));
+                            ((uint32_t*)frameData)[1] &= ~(0xff<<(8*i));
+                            ((uint32_t*)frameData)[1] |= *((uint32_t*)&temp)&(0xff<<(8*i));
                           }
 //				frameData[0] = temp;
-				frameData[1] = 20000.0f;
+				frameData[0] = 20000.0f;
 			}
 			if(drvDir){
                           for(int i=0; i<4; i++){
                             *((uint32_t*)&temp) &= ~(0xff<<(8*i));
-                            *((uint32_t*)&temp) |= ((uint32_t*)frameData)[1]&(0xff<<(8*i));
+                            *((uint32_t*)&temp) |= ((uint32_t*)frameData)[0]&(0xff<<(8*i));
                           }
                           temp *=  -1;
                           for(int i=0; i<4; i++){
-                            ((uint32_t*)frameData)[1] &= ~(0xff<<(8*i));
-                            ((uint32_t*)frameData)[1] |= *((uint32_t*)&temp)&(0xff<<(8*i));
+                            ((uint32_t*)frameData)[0] &= ~(0xff<<(8*i));
+                            ((uint32_t*)frameData)[0] |= *((uint32_t*)&temp)&(0xff<<(8*i));
                           }
                         }
 			lastDrvDir = drvDir;
