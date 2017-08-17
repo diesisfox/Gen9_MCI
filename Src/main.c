@@ -5,41 +5,41 @@
   ******************************************************************************
   * This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether
+  * USER CODE END. Other portions of this file, whether 
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * Copyright (c) 2017 STMicroelectronics International N.V.
+  * Copyright (c) 2017 STMicroelectronics International N.V. 
   * All rights reserved.
   *
-  * Redistribution and use in source and binary forms, with or without
+  * Redistribution and use in source and binary forms, with or without 
   * modification, are permitted, provided that the following conditions are met:
   *
-  * 1. Redistribution of source code must retain the above copyright notice,
+  * 1. Redistribution of source code must retain the above copyright notice, 
   *    this list of conditions and the following disclaimer.
   * 2. Redistributions in binary form must reproduce the above copyright notice,
   *    this list of conditions and the following disclaimer in the documentation
   *    and/or other materials provided with the distribution.
-  * 3. Neither the name of STMicroelectronics nor the names of other
-  *    contributors to this software may be used to endorse or promote products
+  * 3. Neither the name of STMicroelectronics nor the names of other 
+  *    contributors to this software may be used to endorse or promote products 
   *    derived from this software without specific written permission.
-  * 4. This software, including modifications and/or derivative works of this
+  * 4. This software, including modifications and/or derivative works of this 
   *    software, must execute solely and exclusively on microcontroller or
   *    microprocessor devices manufactured by or for STMicroelectronics.
-  * 5. Redistribution and use of this software other than as permitted under
-  *    this license is void and will automatically terminate your rights under
-  *    this license.
+  * 5. Redistribution and use of this software other than as permitted under 
+  *    this license is void and will automatically terminate your rights under 
+  *    this license. 
   *
-  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS"
-  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT
-  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS" 
+  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT 
+  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
   * PARTICULAR PURPOSE AND NON-INFRINGEMENT OF THIRD PARTY INTELLECTUAL PROPERTY
-  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT
+  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT 
   * SHALL STMICROELECTRONICS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
   * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
-  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
+  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
   * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
   * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   *
@@ -167,13 +167,9 @@ int main(void)
 	bxCan_begin(&hcan1, &mainCanRxQHandle, &mainCanTxQHandle);
 	// bxCan_addMaskedFilterStd(p2pOffset,0xFF0,0);
 
-	bxCan2_begin(&hcan2, &can2RxQHandle, &can2TxQHandle);
+//	bxCan2_begin(&hcan2, &motCanRxQHandle, &MotCanTxQHandle);
 	// bxCan2_addMaskedFilterStd(0,0,0);
 	// bxCan2_addMaskedFilterExt(0,0,0);
-
-	#ifndef DISABLE_TMT
-	    Temp_begin(&hadc1);
-	#endif
 
   /* USER CODE END 2 */
 
@@ -250,11 +246,11 @@ int main(void)
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
-
+ 
 
   /* Start scheduler */
   osKernelStart();
-
+  
   /* We should never get here as control is now taken by the scheduler */
 
   /* Infinite loop */
@@ -278,13 +274,13 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct;
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
 
-    /**Configure the main internal regulator output voltage
+    /**Configure the main internal regulator output voltage 
     */
   __HAL_RCC_PWR_CLK_ENABLE();
 
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-    /**Initializes the CPU, AHB and APB busses clocks
+    /**Initializes the CPU, AHB and APB busses clocks 
     */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
@@ -300,7 +296,7 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Initializes the CPU, AHB and APB busses clocks
+    /**Initializes the CPU, AHB and APB busses clocks 
     */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -314,11 +310,11 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure the Systick interrupt time
+    /**Configure the Systick interrupt time 
     */
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
-    /**Configure the Systick
+    /**Configure the Systick 
     */
   HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
@@ -332,7 +328,7 @@ static void MX_ADC1_Init(void)
 
   ADC_ChannelConfTypeDef sConfig;
 
-    /**Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
+    /**Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
     */
   hadc1.Instance = ADC1;
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
@@ -351,7 +347,7 @@ static void MX_ADC1_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+    /**Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
     */
   sConfig.Channel = ADC_CHANNEL_4;
   sConfig.Rank = 1;
@@ -361,7 +357,7 @@ static void MX_ADC1_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+    /**Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
     */
   sConfig.Channel = ADC_CHANNEL_11;
   sConfig.Rank = 2;
@@ -453,10 +449,10 @@ static void MX_WWDG_Init(void)
 
 }
 
-/**
+/** 
   * Enable DMA controller clock
   */
-static void MX_DMA_Init(void)
+static void MX_DMA_Init(void) 
 {
   /* DMA controller clock enable */
   __HAL_RCC_DMA1_CLK_ENABLE();
@@ -475,13 +471,13 @@ static void MX_DMA_Init(void)
 
 }
 
-/** Configure pins as
-        * Analog
-        * Input
+/** Configure pins as 
+        * Analog 
+        * Input 
         * Output
         * EVENT_OUT
         * EXTI
-        * Free pins are configured automatically as Analog (this feature is enabled through
+        * Free pins are configured automatically as Analog (this feature is enabled through 
         * the Code Generation settings)
 */
 static void MX_GPIO_Init(void)
@@ -508,22 +504,22 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : MOT_ON_Pin */
   GPIO_InitStruct.Pin = MOT_ON_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(MOT_ON_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PC2 PC3 PC4 PC5
-                           PC6 PC7 PC8 PC9
+  /*Configure GPIO pins : PC2 PC3 PC4 PC5 
+                           PC6 PC7 PC8 PC9 
                            PC10 PC11 PC12 */
-  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5
-                          |GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9
+  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5 
+                          |GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9 
                           |GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA0 PA1 PA6 PA7
+  /*Configure GPIO pins : PA0 PA1 PA6 PA7 
                            PA8 PA9 PA10 PA15 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_6|GPIO_PIN_7
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_6|GPIO_PIN_7 
                           |GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -536,11 +532,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB0 PB1 PB2 PB10
-                           PB12 PB13 PB3 PB4
+  /*Configure GPIO pins : PB0 PB1 PB2 PB10 
+                           PB12 PB13 PB3 PB4 
                            PB7 PB8 PB9 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_10
-                          |GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_3|GPIO_PIN_4
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_10 
+                          |GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_3|GPIO_PIN_4 
                           |GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -549,7 +545,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pins : DRV_DIR_Pin DRV_MODE_Pin */
   GPIO_InitStruct.Pin = DRV_DIR_Pin|DRV_MODE_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PD2 */
@@ -605,12 +601,11 @@ void doMotCtrl(void const * argument)
 	#define POS_0			20
 	#define MAX_RPM			700
 
-	static Can_frame_t newFrame;
+	Can_frame_t newFrame;
 	static uint16_t accel;
 	static uint16_t regen;
 
 	uint32_t val_100 = 0xfff;
-	uint32_t val_1 = val_100 / 100;
 	uint32_t map_100 = val_100*POS_100/100;
 	uint32_t map_0 = val_100*POS_0/100;
 	uint32_t map_range = map_100-map_0;
@@ -623,14 +618,15 @@ void doMotCtrl(void const * argument)
 	newFrame.isExt = 0;
 	newFrame.isRemote = 0;
 	float* frameData = (float*)newFrame.Data;
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adcBuffer, 2);
 
 	for(;;){
-		osDelay(10);
+		osDelay(50);
 		motOn = HAL_GPIO_ReadPin(MOT_ON_GPIO_Port, MOT_ON_Pin);
 		//process motOn state
 		if(!lastMotOn && motOn || lastMotOn && !motOn){
 			newFrame.id = MOT_RST_CMD_ID;
-			bxCan2_sendFrame(&newFrame);
+			bxCan_sendFrame(&newFrame);
 		}else if(motOn){
 			newFrame.id = MOT_DRV_CMD_ID;
 			drvDir = HAL_GPIO_ReadPin(DRV_DIR_GPIO_Port, DRV_DIR_Pin);
@@ -643,75 +639,94 @@ void doMotCtrl(void const * argument)
 			}else if(accel<= map_100){
 				temp = (float)(accel - map_0)/(float)map_range;
 			}else{
-				temp = 1.0f
+				temp = 1.0f;
 			}
 			if(drvMode){ //speed drive
 				frameData[0] = 1.0f;
-				frameData[1] = temp * MAX_RPM;
+                                temp*=MAX_RPM;
+                                for(int i=0; i<4; i++){
+                                  ((uint32_t*)frameData)[1] &= ~(0xff<<(8*i));
+                                  ((uint32_t*)frameData)[1] |= *((uint32_t*)&temp)&(0xff<<(8*i));
+                                }
+//				frameData[1] = temp * MAX_RPM;
 			}else{ //current drive
-				frameData[0] = temp;
+                          for(int i=0; i<4; i++){
+                            ((uint32_t*)frameData)[0] &= ~(0xff<<(8*i));
+                            ((uint32_t*)frameData)[0] |= *((uint32_t*)&temp)&(0xff<<(8*i));
+                          }
+//				frameData[0] = temp;
 				frameData[1] = 20000.0f;
 			}
-			if(drvDir) frameData[1] *= -1;
+			if(drvDir){
+                          for(int i=0; i<4; i++){
+                            *((uint32_t*)&temp) &= ~(0xff<<(8*i));
+                            *((uint32_t*)&temp) |= ((uint32_t*)frameData)[1]&(0xff<<(8*i));
+                          }
+                          temp *=  -1;
+                          for(int i=0; i<4; i++){
+                            ((uint32_t*)frameData)[1] &= ~(0xff<<(8*i));
+                            ((uint32_t*)frameData)[1] |= *((uint32_t*)&temp)&(0xff<<(8*i));
+                          }
+                        }
 			lastDrvDir = drvDir;
 			lastDrvMode = drvMode;
-			bxCan2_sendFrame(&newFrame);
+			bxCan_sendFrame(&newFrame);
 		}
 		lastMotOn = motOn;
 	}
-  /* USER CODE END 5 */
+  /* USER CODE END 5 */ 
 }
 
 /* doProcessCan function */
 void doProcessCan(void const * argument)
 {
   /* USER CODE BEGIN doProcessCan */
-  uint32_t val_100 = 0xfff;
-  uint32_t val_1 = val_100 / 100;
-  uint32_t map_100 = val_1*80;
-  uint32_t map_0 = val_1*20;
-  uint32_t map_range = map_100-map_0;
-	uint32_t map_val = 0;
-	uint32_t accelerator1;
-
-	Can_frame_t newFrame;
-	newFrame.id = 0x04880120;
-	newFrame.isExt = 1;
-	newFrame.isRemote = 0;
-        newFrame.dlc = 8;
-        newFrame.Data[0] = 0x01;
-        newFrame.Data[1] = 0x00;
-        newFrame.Data[2] = 0x04;
-        newFrame.Data[3] = 0x40;
-        newFrame.Data[4] = 0x00;
-        newFrame.Data[5] = 0x00;
-        newFrame.Data[6] = 0x14;
-	newFrame.Data[7] = 0x14;
-
-  for(int i=0; i<(sizeof(ecuFrames)/sizeof(Can_frame_t)); i++){
-	  	bxCan_sendFrame(&(ecuFrames[i]));
-  }
+  // uint32_t val_100 = 0xfff;
+  // uint32_t val_1 = val_100 / 100;
+  // uint32_t map_100 = val_1*80;
+  // uint32_t map_0 = val_1*20;
+  // uint32_t map_range = map_100-map_0;
+  // int32_t map_val = 0;
+  // int32_t accelerator1;
+  //
+  // an_frame_t newFrame;
+  // ewFrame.id = 0x04880120;
+  // ewFrame.isExt = 1;
+  // ewFrame.isRemote = 0;
+  //       newFrame.dlc = 8;
+  //       newFrame.Data[0] = 0x01;
+  //       newFrame.Data[1] = 0x00;
+  //       newFrame.Data[2] = 0x04;
+  //       newFrame.Data[3] = 0x40;
+  //       newFrame.Data[4] = 0x00;
+  //       newFrame.Data[5] = 0x00;
+  //       newFrame.Data[6] = 0x14;
+  // ewFrame.Data[7] = 0x14;
+  //
+  // for(int i=0; i<(sizeof(ecuFrames)/sizeof(Can_frame_t)); i++){
+  //  	bxCan_sendFrame(&(ecuFrames[i]));
+  // }
   /* Infinite loop */
   for(;;)
   {
-	osDelay(35);
-	accelerator1 = accelerator;
-	if(accelerator1>map_100) accelerator1 = map_100;
-	if((accelerator1<=map_100) && (accelerator1>map_0)){
-		newFrame.Data[2] = 0x00;
-		newFrame.Data[3] = 0x44;
-		map_val = (accelerator1 - map_0) * 0xff / map_range;
-		newFrame.Data[1] = map_val&0xff;
-	}else if((accelerator1 > map_0/4) && (accelerator1 <= map_0)){
-		newFrame.Data[1] = 0x00;
-		newFrame.Data[2] = 0x04;
-		newFrame.Data[3] = 0x44;
-	}else if(accelerator1 <= map_0/4){
-		newFrame.Data[1] = 0x00;
-		newFrame.Data[2] = 0x04;
-		newFrame.Data[3] = 0x40;
-	}
-        bxCan_sendFrame(&newFrame);
+	osDelay(10000);
+	// accelerator1 = accelerator;
+	// if(accelerator1>map_100) accelerator1 = map_100;
+	// if((accelerator1<=map_100) && (accelerator1>map_0)){
+	// 	newFrame.Data[2] = 0x00;
+	// 	newFrame.Data[3] = 0x44;
+	// 	map_val = (accelerator1 - map_0) * 0xff / map_range;
+	// 	newFrame.Data[1] = map_val&0xff;
+	// }else if((accelerator1 > map_0/4) && (accelerator1 <= map_0)){
+	// 	newFrame.Data[1] = 0x00;
+	// 	newFrame.Data[2] = 0x04;
+	// 	newFrame.Data[3] = 0x44;
+	// }else if(accelerator1 <= map_0/4){
+	// 	newFrame.Data[1] = 0x00;
+	// 	newFrame.Data[2] = 0x04;
+	// 	newFrame.Data[3] = 0x40;
+	// }
+    //     bxCan_sendFrame(&newFrame);
   }
   /* USER CODE END doProcessCan */
 }
@@ -852,7 +867,7 @@ void _Error_Handler(char * file, int line)
   while(1)
   {
   }
-  /* USER CODE END Error_Handler_Debug */
+  /* USER CODE END Error_Handler_Debug */ 
 }
 
 #ifdef USE_FULL_ASSERT
@@ -877,10 +892,10 @@ void assert_failed(uint8_t* file, uint32_t line)
 
 /**
   * @}
-  */
+  */ 
 
 /**
   * @}
-*/
+*/ 
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
