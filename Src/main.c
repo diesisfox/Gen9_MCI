@@ -603,10 +603,11 @@ void doMotCtrl(void const * argument)
 	#define MOT_RST_CMD_ID	MOT_BASE_ID + 0x03
 	#define POS_100			80
 	#define POS_0			20
+	#define MAX_RPM			700
 
 	static Can_frame_t newFrame;
-	static uint16_t prevAccel = 0;
-	static uint16_t precRegen = 0;
+	static uint16_t accel;
+	static uint16_t regen;
 
 	uint32_t val_100 = 0xfff;
 	uint32_t val_1 = val_100 / 100;
@@ -634,13 +635,27 @@ void doMotCtrl(void const * argument)
 			newFrame.id = MOT_DRV_CMD_ID;
 			drvDir = HAL_GPIO_ReadPin(DRV_DIR_GPIO_Port, DRV_DIR_Pin);
 			drvMode = HAL_GPIO_ReadPin(DRV_MODE_GPIO_Port, DRV_MODE_Pin);
+			accel = adcBuffer[0];
+			regen = adcBuffer[1];
+			float temp;
+			if(accel< map_0){
+				temp = 0.0f;
+			}else if(accel<= map_100){
+				temp = (float)(accel - map_0)/(float)map_range;
+			}else{
+				temp = 1.0f
+			}
 			if(drvMode){ //speed drive
 				frameData[0] = 1.0f;
+				frameData[1] = temp * MAX_RPM;
 			}else{ //current drive
+				frameData[0] = temp;
 				frameData[1] = 20000.0f;
 			}
+			if(drvDir) frameData[1] *= -1;
 			lastDrvDir = drvDir;
 			lastDrvMode = drvMode;
+			bxCan2_sendFrame(&newFrame);
 		}
 		lastMotOn = motOn;
 	}
