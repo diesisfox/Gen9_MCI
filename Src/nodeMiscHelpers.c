@@ -7,7 +7,6 @@
 #include "nodeMiscHelpers.h"
 #include "nodeConf.h"
 
-uint32_t 	selfStatusWord;
 extern osMutexId 	swMtxHandle;
 extern osMessageQId mainCanTxQHandle;
 extern osMessageQId mainCanRxQHandle;
@@ -197,4 +196,3 @@ void intToHex(uint32_t input, uint8_t *str, int length){
 		input = input>>4;
 	}
 }
-

@@ -93,6 +93,9 @@ osMutexId uartMtxHandle;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 static uint16_t adcBuffer[8];
+const uint32_t firmwareString = 0x00000001;			// Firmware Version string
+const uint8_t selfNodeID = mc_nodeID;
+uint32_t selfStatusWord = ACTIVE;	// Initialize
 //TODO flaming can dumpster
 /* USER CODE END PV */
 
@@ -131,7 +134,6 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	selfStatusWord = INIT;
 	#define DISABLE_RT
   /* USER CODE END 1 */
 
@@ -165,9 +167,9 @@ int main(void)
 	Serial2_begin();
 
 	bxCan_begin(&hcan1, &mainCanRxQHandle, &mainCanTxQHandle);
-	// bxCan_addMaskedFilterStd(p2pOffset,0xFF0,0);
+	bxCan_addMaskedFilterStd(p2pOffset,0xFF0,0);
 
-//	bxCan2_begin(&hcan2, &motCanRxQHandle, &MotCanTxQHandle);
+	bxCan2_begin(&hcan2, &motCanRxQHandle, &MotCanTxQHandle);
 	// bxCan2_addMaskedFilterStd(0,0,0);
 	// bxCan2_addMaskedFilterExt(0,0,0);
 
@@ -202,7 +204,7 @@ int main(void)
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
   osTimerStart(WWDGTmrHandle, WD_Interval);
-  // osTimerStart(HBTmrHandle, HB_Interval);
+  osTimerStart(HBTmrHandle, HB_Interval);
   /* USER CODE END RTOS_TIMERS */
 
   /* Create the thread(s) */
@@ -373,7 +375,7 @@ static void MX_CAN1_Init(void)
 {
 
   hcan1.Instance = CAN1;
-  hcan1.Init.Prescaler = 20;
+  hcan1.Init.Prescaler = 10;
   hcan1.Init.Mode = CAN_MODE_NORMAL;
   hcan1.Init.SJW = CAN_SJW_1TQ;
   hcan1.Init.BS1 = CAN_BS1_13TQ;
@@ -396,14 +398,14 @@ static void MX_CAN2_Init(void)
 {
 
   hcan2.Instance = CAN2;
-  hcan2.Init.Prescaler = 20;
+  hcan2.Init.Prescaler = 10;
   hcan2.Init.Mode = CAN_MODE_NORMAL;
   hcan2.Init.SJW = CAN_SJW_1TQ;
   hcan2.Init.BS1 = CAN_BS1_13TQ;
   hcan2.Init.BS2 = CAN_BS2_2TQ;
   hcan2.Init.TTCM = DISABLE;
   hcan2.Init.ABOM = ENABLE;
-  hcan2.Init.AWUM = DISABLE;
+  hcan2.Init.AWUM = ENABLE;
   hcan2.Init.NART = DISABLE;
   hcan2.Init.RFLM = DISABLE;
   hcan2.Init.TXFP = DISABLE;
@@ -626,12 +628,12 @@ void doMotCtrl(void const * argument)
 		//process motOn state
 		if(!lastMotOn && motOn || lastMotOn && !motOn){
 			newFrame.id = MOT_RST_CMD_ID;
-			bxCan_sendFrame(&newFrame);
+			bxCan2_sendFrame(&newFrame);
 		}else if(motOn){
 			newFrame.id = MOT_PWR_CMD_ID;
 			frameData[0] = 1.0f;
 			frameData[1] = 1.0f;
-			bxCan_sendFrame(&newFrame);
+			bxCan2_sendFrame(&newFrame);
 			newFrame.id = MOT_DRV_CMD_ID;
 			drvDir = HAL_GPIO_ReadPin(DRV_DIR_GPIO_Port, DRV_DIR_Pin);
 			drvMode = HAL_GPIO_ReadPin(DRV_MODE_GPIO_Port, DRV_MODE_Pin);
@@ -692,7 +694,7 @@ void doMotCtrl(void const * argument)
 			}
 			lastDrvDir = drvDir;
 			lastDrvMode = drvMode;
-			bxCan_sendFrame(&newFrame);
+			bxCan2_sendFrame(&newFrame);
 		}
 		lastMotOn = motOn;
 	}
